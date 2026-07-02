@@ -4,6 +4,8 @@
 
 Typeflow is a declarative mapping language for JSON with first-class TypeScript typing — validated paths, inferred output types, and compile-time errors for your data transformations.
 
+**[▶ Try it in the Playground](https://thomasfarineau.github.io/typeflow/playground)** · [Documentation](https://thomasfarineau.github.io/typeflow/)
+
 You've written this function a hundred times: take the API's JSON, reshape it into the type your app wants. It's boring, it's error-prone, and when the API changes, TypeScript can't tell you which of your forty mapping functions just broke. JSONata and jq make the transformation declarative — but invisible to your compiler. Typeflow makes it declarative *and* typed: paths autocomplete, typos are compile errors, output types are inferred, and your mappings are artifacts you can test, diff, and trust.
 
 ```
@@ -162,6 +164,7 @@ $ bun install
 $ bun test            # 38 tests across parser, compiler, runtime, adapter, e2e
 $ bun run typecheck   # generate example declarations + tsc --noEmit
 $ bun run demo        # compile + run examples/api-response
+$ bun run docs:dev    # docs + playground (VitePress)
 ```
 
 ## Roadmap

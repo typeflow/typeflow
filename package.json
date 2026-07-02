@@ -10,10 +10,14 @@
     "test": "bun test",
     "typecheck": "bun packages/cli/src/main.ts types \"examples/**/*.typeflow\" && tsc --noEmit",
     "check:examples": "bun packages/cli/src/main.ts check \"examples/**/*.typeflow\"",
-    "demo": "bun examples/api-response/demo.ts"
+    "demo": "bun examples/api-response/demo.ts",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@types/bun": "^1.2.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "vitepress": "^1.6.3"
   }
 }
