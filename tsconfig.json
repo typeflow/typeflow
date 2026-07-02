@@ -19,6 +19,7 @@
       "@thomasfarineau/typeflow-compiler": ["./packages/compiler/src/index.ts"],
       "@thomasfarineau/typeflow-runtime": ["./packages/runtime/src/index.ts"],
       "@thomasfarineau/typeflow-adapter-typescript": ["./packages/adapter-typescript/src/index.ts"],
+      "@thomasfarineau/typeflow-formatter": ["./packages/formatter/src/index.ts"],
       "@thomasfarineau/typeflow-cli": ["./packages/cli/src/index.ts"],
       "@thomasfarineau/typeflow-bun-plugin": ["./packages/bun-plugin/src/index.ts"],
       "@thomasfarineau/typeflow": ["./packages/typeflow/src/index.ts"]

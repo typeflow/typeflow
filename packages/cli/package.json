@@ -14,6 +14,7 @@
     "@thomasfarineau/typeflow-core": "workspace:*",
     "@thomasfarineau/typeflow-compiler": "workspace:*",
     "@thomasfarineau/typeflow-runtime": "workspace:*",
+    "@thomasfarineau/typeflow-formatter": "workspace:*",
     "@thomasfarineau/typeflow-adapter-typescript": "workspace:*"
   }
 }

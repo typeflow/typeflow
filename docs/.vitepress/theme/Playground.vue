@@ -3,6 +3,9 @@ import { computed, ref } from "vue";
 import { offsetToLineCol, typeToString, type Diagnostic } from "@thomasfarineau/typeflow-core";
 import { compile } from "@thomasfarineau/typeflow-compiler";
 import { createMapping } from "@thomasfarineau/typeflow-runtime";
+import { format } from "@thomasfarineau/typeflow-formatter";
+import CodeEditor from "./CodeEditor.vue";
+import { highlightJson, highlightTypeflow } from "./highlight.ts";
 
 const DEFAULT_MAPPING = `# The playground uses inline input declarations.
 # (In a project, bind a TypeScript type: input user: ApiUser from "./types")
@@ -90,6 +93,16 @@ const output = computed(() => {
   }
 });
 
+const outputHtml = computed(() => highlightJson(output.value));
+
+function formatAll() {
+  const result = format(mappingText.value);
+  if (result.ok) mappingText.value = result.formatted;
+  if (!inputError.value) {
+    inputText.value = JSON.stringify(JSON.parse(inputText.value), null, 2) + "\n";
+  }
+}
+
 function reset() {
   mappingText.value = DEFAULT_MAPPING;
   inputText.value = DEFAULT_INPUT;
@@ -105,23 +118,26 @@ function reset() {
           {{ errorCount ? `✖ ${errorCount} error(s)` : "✔ no errors" }}
         </span>
       </div>
-      <button class="tf-reset" @click="reset">Reset example</button>
+      <div class="tf-actions">
+        <button class="tf-btn tf-primary" @click="formatAll">Format</button>
+        <button class="tf-btn" @click="reset">Reset example</button>
+      </div>
     </div>
 
     <div class="tf-grid">
       <section class="tf-pane">
         <header>Input JSON <span v-if="inputError" class="tf-badge bad">invalid</span></header>
-        <textarea v-model="inputText" spellcheck="false" />
+        <CodeEditor v-model="inputText" :highlight="highlightJson" />
       </section>
 
       <section class="tf-pane">
         <header>Mapping (.typeflow)</header>
-        <textarea v-model="mappingText" spellcheck="false" class="tf-mapping" />
+        <CodeEditor v-model="mappingText" :highlight="highlightTypeflow" />
       </section>
 
       <section class="tf-pane">
         <header>Output</header>
-        <pre class="tf-output">{{ output }}</pre>
+        <pre class="tf-output" v-html="outputHtml"></pre>
         <header class="tf-subheader">Inferred output type</header>
         <pre class="tf-output tf-type">{{ inferredType }}</pre>
       </section>
@@ -170,7 +186,11 @@ function reset() {
 }
 .tf-status.good { background: var(--vp-c-green-soft); color: var(--vp-c-green-1); }
 .tf-status.bad { background: var(--vp-c-red-soft); color: var(--vp-c-red-1); }
-.tf-reset {
+.tf-actions {
+  display: flex;
+  gap: 8px;
+}
+.tf-btn {
   font-size: 13px;
   padding: 4px 12px;
   border-radius: 6px;
@@ -179,7 +199,12 @@ function reset() {
   color: var(--vp-c-text-1);
   cursor: pointer;
 }
-.tf-reset:hover { border-color: var(--vp-c-brand-1); }
+.tf-btn:hover { border-color: var(--vp-c-brand-1); }
+.tf-primary {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  border-color: transparent;
+}
 .tf-grid {
   display: grid;
   grid-template-columns: 1fr 1.2fr 1fr;
@@ -218,21 +243,6 @@ function reset() {
   text-transform: none;
   letter-spacing: normal;
 }
-.tf-pane textarea {
-  flex: 1;
-  width: 100%;
-  padding: 12px;
-  border: none;
-  outline: none;
-  resize: vertical;
-  background: var(--vp-c-bg);
-  color: var(--vp-c-text-1);
-  font-family: var(--vp-font-family-mono);
-  font-size: 13px;
-  line-height: 1.6;
-  tab-size: 2;
-  min-height: 200px;
-}
 .tf-output {
   flex: 1;
   margin: 0;
@@ -240,7 +250,7 @@ function reset() {
   overflow: auto;
   background: var(--vp-c-bg);
   color: var(--vp-c-text-1);
-  font-family: var(--vp-font-family-mono);
+  font-family: var(--vp-font-family-mono), monospace;
   font-size: 13px;
   line-height: 1.6;
   white-space: pre;
@@ -260,7 +270,7 @@ function reset() {
 }
 .tf-diagnostics li {
   padding: 4px 12px;
-  font-family: var(--vp-font-family-mono);
+  font-family: var(--vp-font-family-mono), monospace;
   font-size: 13px;
   display: block;
 }

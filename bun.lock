@@ -41,6 +41,7 @@
         "@thomasfarineau/typeflow-adapter-typescript": "workspace:*",
         "@thomasfarineau/typeflow-compiler": "workspace:*",
         "@thomasfarineau/typeflow-core": "workspace:*",
+        "@thomasfarineau/typeflow-formatter": "workspace:*",
         "@thomasfarineau/typeflow-runtime": "workspace:*",
       },
     },
@@ -55,6 +56,14 @@
     "packages/core": {
       "name": "@thomasfarineau/typeflow-core",
       "version": "0.1.0",
+    },
+    "packages/formatter": {
+      "name": "@thomasfarineau/typeflow-formatter",
+      "version": "0.1.0",
+      "dependencies": {
+        "@thomasfarineau/typeflow-core": "workspace:*",
+        "@thomasfarineau/typeflow-parser": "workspace:*",
+      },
     },
     "packages/parser": {
       "name": "@thomasfarineau/typeflow-parser",
@@ -79,6 +88,7 @@
         "@thomasfarineau/typeflow-cli": "workspace:*",
         "@thomasfarineau/typeflow-compiler": "workspace:*",
         "@thomasfarineau/typeflow-core": "workspace:*",
+        "@thomasfarineau/typeflow-formatter": "workspace:*",
         "@thomasfarineau/typeflow-parser": "workspace:*",
         "@thomasfarineau/typeflow-runtime": "workspace:*",
       },
@@ -264,6 +274,8 @@
     "@thomasfarineau/typeflow-compiler": ["@thomasfarineau/typeflow-compiler@workspace:packages/compiler"],
 
     "@thomasfarineau/typeflow-core": ["@thomasfarineau/typeflow-core@workspace:packages/core"],
+
+    "@thomasfarineau/typeflow-formatter": ["@thomasfarineau/typeflow-formatter@workspace:packages/formatter"],
 
     "@thomasfarineau/typeflow-parser": ["@thomasfarineau/typeflow-parser@workspace:packages/parser"],
 

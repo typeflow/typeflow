@@ -11,6 +11,7 @@ export { compile, emitDts, BUILTINS } from "@thomasfarineau/typeflow-compiler";
 export type { CompileOptions, CompileResult, TypeResolver, ResolveTypeRequest } from "@thomasfarineau/typeflow-compiler";
 export { createMapping, runMapping, TypeflowRuntimeError, type MappingFn } from "@thomasfarineau/typeflow-runtime";
 export { createTypeScriptResolver, resolveTypeScriptType } from "@thomasfarineau/typeflow-adapter-typescript";
+export { format, type FormatResult } from "@thomasfarineau/typeflow-formatter";
 export { typeflowPlugin } from "@thomasfarineau/typeflow-bun-plugin";
 
 /** Compile a `.typeflow` file from disk with the TypeScript schema adapter wired in. */

@@ -40,6 +40,7 @@ export default defineConfig({
       alias: {
         "@thomasfarineau/typeflow-core": pkg("core"),
         "@thomasfarineau/typeflow-parser": pkg("parser"),
+        "@thomasfarineau/typeflow-formatter": pkg("formatter"),
         "@thomasfarineau/typeflow-compiler": pkg("compiler"),
         "@thomasfarineau/typeflow-runtime": pkg("runtime"),
       },

@@ -17,6 +17,7 @@
     "@thomasfarineau/typeflow-parser": "workspace:*",
     "@thomasfarineau/typeflow-compiler": "workspace:*",
     "@thomasfarineau/typeflow-runtime": "workspace:*",
+    "@thomasfarineau/typeflow-formatter": "workspace:*",
     "@thomasfarineau/typeflow-adapter-typescript": "workspace:*",
     "@thomasfarineau/typeflow-cli": "workspace:*",
     "@thomasfarineau/typeflow-bun-plugin": "workspace:*"

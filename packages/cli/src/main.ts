@@ -6,6 +6,8 @@ import { relative, resolve } from "node:path";
 import { createMapping } from "@thomasfarineau/typeflow-runtime";
 import { emitDts } from "@thomasfarineau/typeflow-compiler";
 import { createTypeScriptResolver } from "@thomasfarineau/typeflow-adapter-typescript";
+import { format } from "@thomasfarineau/typeflow-formatter";
+import { formatDiagnostic } from "@thomasfarineau/typeflow-core";
 import {
   compileFile,
   countBySeverity,
@@ -24,6 +26,7 @@ Usage:
   typeflow types [patterns...] [--check] Generate .d.typeflow.ts declaration files
   typeflow infer <file>                  Print the inferred output type of a mapping
   typeflow run <file> [--input <json>]   Execute a mapping (input from file or stdin)
+  typeflow fmt [patterns...] [--check]   Rewrite mappings in canonical form
   typeflow watch [patterns...]           Re-check and regenerate types on change
   typeflow init                          Scaffold an example mapping in the current directory
   typeflow help                          Show this message
@@ -149,6 +152,36 @@ async function cmdRun(file: string | undefined, inputPath: string | undefined): 
   console.log(JSON.stringify(output, null, 2));
 }
 
+async function cmdFmt(patterns: string[], checkOnly: boolean): Promise<void> {
+  const files = await expandFiles(patterns);
+  if (files.length === 0) {
+    console.error("No .typeflow files found.");
+    process.exit(1);
+  }
+  let changed = 0;
+  let failed = 0;
+  for (const file of files) {
+    const rel = relative(process.cwd(), file).replace(/\\/g, "/");
+    const source = await readFile(file, "utf8");
+    const result = format(source);
+    if (!result.ok) {
+      failed++;
+      for (const d of result.diagnostics) console.error(formatDiagnostic(d, source, rel, { color }));
+      continue;
+    }
+    if (result.formatted === source) continue;
+    changed++;
+    if (checkOnly) {
+      console.error(`not formatted: ${rel}`);
+    } else {
+      await writeFile(file, result.formatted, "utf8");
+      console.log(`formatted ${rel}`);
+    }
+  }
+  if (failed > 0 || (checkOnly && changed > 0)) process.exit(1);
+  if (changed === 0) console.log(`✔ ${files.length} file(s) already formatted.`);
+}
+
 async function cmdWatch(patterns: string[]): Promise<void> {
   const runOnce = async () => {
     try {
@@ -233,6 +266,8 @@ async function main(): Promise<void> {
       return cmdInfer(positional[0]);
     case "run":
       return cmdRun(positional[0], typeof flags.get("input") === "string" ? (flags.get("input") as string) : undefined);
+    case "fmt":
+      return cmdFmt(positional, flags.get("check") === true);
     case "watch":
       return cmdWatch(positional);
     case "init":

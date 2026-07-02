@@ -1,6 +1,7 @@
 import DefaultTheme from "vitepress/theme";
 import type { Theme } from "vitepress";
 import Playground from "./Playground.vue";
+import "./tokens.css";
 
 export default {
   extends: DefaultTheme,
