@@ -1,0 +1,17 @@
+{
+  "name": "@thomasfarineau/typeflow-adapter-typescript",
+  "version": "0.1.0",
+  "description": "Typeflow schema adapter: bind mapping inputs to exported TypeScript types via the TS compiler API.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@thomasfarineau/typeflow-core": "workspace:*",
+    "@thomasfarineau/typeflow-compiler": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  }
+}

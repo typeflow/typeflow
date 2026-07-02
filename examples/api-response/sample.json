@@ -1,0 +1,14 @@
+{
+  "id": 42,
+  "firstName": "Ada",
+  "lastName": "Lovelace",
+  "role": "admin",
+  "contact": {},
+  "address": { "city": "London" },
+  "labels": [
+    { "name": "founder", "active": true },
+    { "name": "legacy", "active": false },
+    { "name": "math", "active": true }
+  ],
+  "scores": [10, 20, 12]
+}

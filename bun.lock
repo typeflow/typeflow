@@ -1,0 +1,113 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "typeflow-monorepo",
+      "devDependencies": {
+        "@types/bun": "^1.2.0",
+        "typescript": "^5.6.0",
+      },
+    },
+    "packages/adapter-typescript": {
+      "name": "@thomasfarineau/typeflow-adapter-typescript",
+      "version": "0.1.0",
+      "dependencies": {
+        "@thomasfarineau/typeflow-compiler": "workspace:*",
+        "@thomasfarineau/typeflow-core": "workspace:*",
+      },
+      "peerDependencies": {
+        "typescript": ">=5.0.0",
+      },
+    },
+    "packages/bun-plugin": {
+      "name": "@thomasfarineau/typeflow-bun-plugin",
+      "version": "0.1.0",
+      "dependencies": {
+        "@thomasfarineau/typeflow-adapter-typescript": "workspace:*",
+        "@thomasfarineau/typeflow-compiler": "workspace:*",
+        "@thomasfarineau/typeflow-core": "workspace:*",
+        "@thomasfarineau/typeflow-runtime": "workspace:*",
+      },
+    },
+    "packages/cli": {
+      "name": "@thomasfarineau/typeflow-cli",
+      "version": "0.1.0",
+      "bin": {
+        "typeflow": "./src/main.ts",
+      },
+      "dependencies": {
+        "@thomasfarineau/typeflow-adapter-typescript": "workspace:*",
+        "@thomasfarineau/typeflow-compiler": "workspace:*",
+        "@thomasfarineau/typeflow-core": "workspace:*",
+        "@thomasfarineau/typeflow-runtime": "workspace:*",
+      },
+    },
+    "packages/compiler": {
+      "name": "@thomasfarineau/typeflow-compiler",
+      "version": "0.1.0",
+      "dependencies": {
+        "@thomasfarineau/typeflow-core": "workspace:*",
+        "@thomasfarineau/typeflow-parser": "workspace:*",
+      },
+    },
+    "packages/core": {
+      "name": "@thomasfarineau/typeflow-core",
+      "version": "0.1.0",
+    },
+    "packages/parser": {
+      "name": "@thomasfarineau/typeflow-parser",
+      "version": "0.1.0",
+      "dependencies": {
+        "@thomasfarineau/typeflow-core": "workspace:*",
+      },
+    },
+    "packages/runtime": {
+      "name": "@thomasfarineau/typeflow-runtime",
+      "version": "0.1.0",
+      "dependencies": {
+        "@thomasfarineau/typeflow-core": "workspace:*",
+      },
+    },
+    "packages/typeflow": {
+      "name": "@thomasfarineau/typeflow",
+      "version": "0.1.0",
+      "dependencies": {
+        "@thomasfarineau/typeflow-adapter-typescript": "workspace:*",
+        "@thomasfarineau/typeflow-bun-plugin": "workspace:*",
+        "@thomasfarineau/typeflow-cli": "workspace:*",
+        "@thomasfarineau/typeflow-compiler": "workspace:*",
+        "@thomasfarineau/typeflow-core": "workspace:*",
+        "@thomasfarineau/typeflow-parser": "workspace:*",
+        "@thomasfarineau/typeflow-runtime": "workspace:*",
+      },
+    },
+  },
+  "packages": {
+    "@thomasfarineau/typeflow": ["@thomasfarineau/typeflow@workspace:packages/typeflow"],
+
+    "@thomasfarineau/typeflow-adapter-typescript": ["@thomasfarineau/typeflow-adapter-typescript@workspace:packages/adapter-typescript"],
+
+    "@thomasfarineau/typeflow-bun-plugin": ["@thomasfarineau/typeflow-bun-plugin@workspace:packages/bun-plugin"],
+
+    "@thomasfarineau/typeflow-cli": ["@thomasfarineau/typeflow-cli@workspace:packages/cli"],
+
+    "@thomasfarineau/typeflow-compiler": ["@thomasfarineau/typeflow-compiler@workspace:packages/compiler"],
+
+    "@thomasfarineau/typeflow-core": ["@thomasfarineau/typeflow-core@workspace:packages/core"],
+
+    "@thomasfarineau/typeflow-parser": ["@thomasfarineau/typeflow-parser@workspace:packages/parser"],
+
+    "@thomasfarineau/typeflow-runtime": ["@thomasfarineau/typeflow-runtime@workspace:packages/runtime"],
+
+    "@types/bun": ["@types/bun@1.3.14", "", { "dependencies": { "bun-types": "1.3.14" } }, "sha512-h1hFqFVcvAvD9j9K7ZW7vd82aSA+rTdznZa+5bwvCwqSB1jmmfLcbIWhOLx1/+boy/xmjgCs/OMUL8hRJSmnPw=="],
+
+    "@types/node": ["@types/node@26.1.0", "", { "dependencies": { "undici-types": "~8.3.0" } }, "sha512-O0A1G3xPGy4w7AgQdAQYUlQ+BKk2Oovw8eRpofyp5KdBZULnbe+WqaOVNrm705SHphCiG4XHsACrSmPu1f+Kgw=="],
+
+    "bun-types": ["bun-types@1.3.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ=="],
+
+    "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "undici-types": ["undici-types@8.3.0", "", {}, "sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ=="],
+  }
+}

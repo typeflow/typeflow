@@ -1,0 +1,16 @@
+# Normalize the upstream API user into the app's view model.
+input user: ApiUser from "./user-types"
+
+map {
+  id: user.id,
+  fullName: user.firstName + " " + user.lastName,
+  isAdmin: user.role == "admin",
+  email: user.contact?.email ?? "unknown",
+  activeTags: user.labels[active].name,
+  tagCount: count(user.labels),
+  totalScore: sum(user.scores),
+  address: user.address -> {
+    city: city,
+    country: country ?? "unknown",
+  },
+}

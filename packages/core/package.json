@@ -1,0 +1,10 @@
+{
+  "name": "@thomasfarineau/typeflow-core",
+  "version": "0.1.0",
+  "description": "Typeflow internal type model, AST, and diagnostics. Zero dependencies.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

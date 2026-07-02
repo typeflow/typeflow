@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.d.typeflow.ts
+.idea/
+*.iml
+*.log
+.DS_Store

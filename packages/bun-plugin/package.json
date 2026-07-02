@@ -1,0 +1,16 @@
+{
+  "name": "@thomasfarineau/typeflow-bun-plugin",
+  "version": "0.1.0",
+  "description": "Bun plugin: import .typeflow files as typed, precompiled mapping functions.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@thomasfarineau/typeflow-compiler": "workspace:*",
+    "@thomasfarineau/typeflow-core": "workspace:*",
+    "@thomasfarineau/typeflow-runtime": "workspace:*",
+    "@thomasfarineau/typeflow-adapter-typescript": "workspace:*"
+  }
+}

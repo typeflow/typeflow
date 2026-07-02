@@ -1,0 +1,19 @@
+{
+  "name": "typeflow-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "typeflow": "bun packages/cli/src/main.ts",
+    "test": "bun test",
+    "typecheck": "bun packages/cli/src/main.ts types \"examples/**/*.typeflow\" && tsc --noEmit",
+    "check:examples": "bun packages/cli/src/main.ts check \"examples/**/*.typeflow\"",
+    "demo": "bun examples/api-response/demo.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "typescript": "^5.6.0"
+  }
+}
