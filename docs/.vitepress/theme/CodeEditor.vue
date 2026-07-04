@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref } from 'vue';
 
 const props = defineProps<{
   modelValue: string;
   highlight: (source: string) => string;
 }>();
-const emit = defineEmits<{ "update:modelValue": [value: string] }>();
+const emit = defineEmits<{ 'update:modelValue': [value: string] }>();
 
 const textarea = ref<HTMLTextAreaElement>();
 const backdrop = ref<HTMLElement>();
 
 // Trailing newline so the highlighted <pre> keeps the same height as the textarea.
-const html = computed(() => props.highlight(props.modelValue) + "\n");
+const html = computed(() => props.highlight(props.modelValue) + '\n');
 
 function onInput(e: Event) {
-  emit("update:modelValue", (e.target as HTMLTextAreaElement).value);
+  emit('update:modelValue', (e.target as HTMLTextAreaElement).value);
 }
 
 function onScroll() {
@@ -24,12 +24,13 @@ function onScroll() {
 }
 
 function onKeydown(e: KeyboardEvent) {
-  if (e.key !== "Tab") return;
+  if (e.key !== 'Tab') return;
   e.preventDefault();
   const el = textarea.value!;
   const { selectionStart, selectionEnd, value } = el;
-  const next = value.slice(0, selectionStart) + "  " + value.slice(selectionEnd);
-  emit("update:modelValue", next);
+  const next =
+    value.slice(0, selectionStart) + '  ' + value.slice(selectionEnd);
+  emit('update:modelValue', next);
   requestAnimationFrame(() => {
     el.selectionStart = el.selectionEnd = selectionStart + 2;
   });
@@ -38,7 +39,10 @@ function onKeydown(e: KeyboardEvent) {
 
 <template>
   <div class="ce-wrap">
-    <pre ref="backdrop" class="ce-backdrop" aria-hidden="true"><code v-html="html"></code></pre>
+    <pre
+      ref="backdrop"
+      class="ce-backdrop"
+      aria-hidden="true"><code v-html="html"></code></pre>
     <textarea
       ref="textarea"
       class="ce-input"
@@ -48,8 +52,7 @@ function onKeydown(e: KeyboardEvent) {
       autocapitalize="off"
       @input="onInput"
       @scroll="onScroll"
-      @keydown="onKeydown"
-    />
+      @keydown="onKeydown" />
   </div>
 </template>
 

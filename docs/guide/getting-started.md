@@ -1,15 +1,19 @@
 # Getting started
 
+[[toc]]
+
 Typeflow lets you write JSON transformations in `.typeflow` files that TypeScript actually understands — input paths are validated, output types are inferred, and mistakes fail your build instead of your production traffic.
 
 ## Install
 
+One package, no extra setup — works with plain Node (≥ 18), npm, pnpm, or Bun:
+
 ```console
-$ bun add -d @thomasfarineau/typeflow
+$ npm i @thomasfarineau/typeflow
 ```
 
 ::: warning Pre-release
-Typeflow is pre-1.0: syntax and APIs are unstable by design, and the packages are not yet published to npm. Clone the repository to try it today.
+Typeflow is pre-1.0: syntax and APIs are unstable by design, and the package is not yet published to npm. Clone the repository to try it today.
 :::
 
 ## Your first mapping
@@ -17,7 +21,7 @@ Typeflow is pre-1.0: syntax and APIs are unstable by design, and the packages ar
 Scaffold an example:
 
 ```console
-$ bunx typeflow init
+$ npx typeflow init
 Created user-types.ts, user.typeflow.
 ```
 
@@ -37,13 +41,37 @@ map {
 Check it, inspect the inferred output, run it:
 
 ```console
-$ bunx typeflow check user.typeflow
+$ npx typeflow check user.typeflow
 ✔ 1 mapping(s) checked, 0 errors.
 
-$ bunx typeflow infer user.typeflow
+$ npx typeflow infer user.typeflow
 { id: number; fullName: string; email: string; activeTags: string[] }
 
-$ echo '{"id":1,"firstName":"Ada","lastName":"Lovelace","labels":[]}' | bunx typeflow run user.typeflow
+$ echo '{"id":1,"firstName":"Ada","lastName":"Lovelace","labels":[]}' | npx typeflow run user.typeflow
+```
+
+## Use it from code
+
+`loadTypeflowMapping` compiles the file, resolves its TypeScript types, imports any
+[`use` functions](/functions/custom#use), and returns a ready mapping function:
+
+```ts
+import { loadTypeflowMapping } from '@thomasfarineau/typeflow';
+
+const mapUser = await loadTypeflowMapping('./user.typeflow');
+const view = mapUser(apiResponse);
+```
+
+For hot paths, compile once and serialize: the compiled artifact is plain JSON, and
+`@thomasfarineau/typeflow/runtime` is a tiny dependency-free interpreter you can ship alone
+(it even runs in the browser — the [playground](/playground) is exactly that).
+
+```ts
+import { compile } from '@thomasfarineau/typeflow';
+import { createMapping } from '@thomasfarineau/typeflow/runtime';
+
+const { compiled } = compile(source, { fileName: 'user.typeflow' });
+const mapUser = createMapping(compiled!);
 ```
 
 ## Typed imports
@@ -51,7 +79,7 @@ $ echo '{"id":1,"firstName":"Ada","lastName":"Lovelace","labels":[]}' | bunx typ
 Generate declarations and enable `allowArbitraryExtensions`:
 
 ```console
-$ bunx typeflow types
+$ npx typeflow types
 generated user.d.typeflow.ts
 ```
 
@@ -60,7 +88,11 @@ generated user.d.typeflow.ts
 { "compilerOptions": { "allowArbitraryExtensions": true } }
 ```
 
-With the Bun plugin preloaded, `.typeflow` files import as typed functions:
+TypeScript now understands `import mapUser from "./user.typeflow"` — with full input/output types.
+
+### Bun bundler plugin (optional)
+
+Bun users can make that import work at runtime/build time too, so `.typeflow` files load as precompiled functions:
 
 ```toml
 # bunfig.toml
@@ -69,22 +101,9 @@ preload = ["./typeflow-preload.ts"]
 
 ```ts
 // typeflow-preload.ts
-import { plugin } from "bun";
-import { typeflowPlugin } from "@thomasfarineau/typeflow-bun-plugin";
+import { plugin } from 'bun';
+import { typeflowPlugin } from '@thomasfarineau/typeflow/plugin';
 plugin(typeflowPlugin());
-```
-
-```ts
-import mapUser from "./user.typeflow"; // (input: Input) => Output
-```
-
-## Programmatic API
-
-```ts
-import { loadTypeflowMapping } from "@thomasfarineau/typeflow";
-
-const mapUser = await loadTypeflowMapping("./user.typeflow");
-const view = mapUser(apiResponse);
 ```
 
 ## CI

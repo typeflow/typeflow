@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { offsetToLineCol, typeToString, type Diagnostic } from "@thomasfarineau/typeflow-core";
-import { compile } from "@thomasfarineau/typeflow-compiler";
-import { createMapping } from "@thomasfarineau/typeflow-runtime";
-import { format } from "@thomasfarineau/typeflow-formatter";
-import CodeEditor from "./CodeEditor.vue";
-import { highlightJson, highlightTypeflow } from "./highlight.ts";
+import { computed, onMounted, ref } from 'vue';
+import { decodePlaygroundState, encodePlaygroundState } from './share';
+import {
+  type Diagnostic,
+  offsetToLineCol,
+  typeToString,
+} from '@thomasfarineau/typeflow-core';
+import { highlightJson, highlightTypeflow } from './highlight';
+import CodeEditor from './CodeEditor.vue';
+import { compile } from '@thomasfarineau/typeflow-compiler';
+import { createMapping } from '@thomasfarineau/typeflow-runtime';
+import { DEMO_FUNCTIONS } from './demo-functions';
+import { format } from '@thomasfarineau/typeflow-formatter';
+import { useData } from 'vitepress';
 
 const DEFAULT_MAPPING = `# The playground uses inline input declarations.
 # (In a project, bind a TypeScript type: input user: ApiUser from "./types")
@@ -47,7 +54,9 @@ const DEFAULT_INPUT = `{
 const mappingText = ref(DEFAULT_MAPPING);
 const inputText = ref(DEFAULT_INPUT);
 
-const compiled = computed(() => compile(mappingText.value, { fileName: "playground.typeflow" }));
+const compiled = computed(() =>
+  compile(mappingText.value, { fileName: 'playground.typeflow' }),
+);
 
 interface UiDiagnostic {
   line: number;
@@ -61,14 +70,25 @@ interface UiDiagnostic {
 const diagnostics = computed<UiDiagnostic[]>(() =>
   compiled.value.diagnostics.map((d: Diagnostic) => {
     const { line, col } = offsetToLineCol(mappingText.value, d.span.start);
-    return { line, col, severity: d.severity, code: d.code, message: d.message, hint: d.hint };
+    return {
+      line,
+      col,
+      severity: d.severity,
+      code: d.code,
+      message: d.message,
+      hint: d.hint,
+    };
   }),
 );
 
-const errorCount = computed(() => diagnostics.value.filter((d) => d.severity === "error").length);
+const errorCount = computed(
+  () => diagnostics.value.filter((d) => d.severity === 'error').length,
+);
 
 const inferredType = computed(() =>
-  compiled.value.outputType ? typeToString(compiled.value.outputType) : "unknown",
+  compiled.value.outputType
+    ? typeToString(compiled.value.outputType)
+    : 'unknown',
 );
 
 const inputError = computed(() => {
@@ -81,13 +101,16 @@ const inputError = computed(() => {
 });
 
 const output = computed(() => {
-  if (inputError.value) return `// Input is not valid JSON:\n// ${inputError.value}`;
+  if (inputError.value)
+    return `// Input is not valid JSON:\n// ${inputError.value}`;
   if (errorCount.value > 0 || !compiled.value.compiled) {
-    return "// Fix the mapping errors to see the output.";
+    return '// Fix the mapping errors to see the output.';
   }
   try {
-    const result = createMapping(compiled.value.compiled)(JSON.parse(inputText.value));
-    return JSON.stringify(result, null, 2) ?? "undefined";
+    const result = createMapping(compiled.value.compiled, {
+      functions: DEMO_FUNCTIONS,
+    })(JSON.parse(inputText.value));
+    return JSON.stringify(result, null, 2) ?? 'undefined';
   } catch (e) {
     return `// Runtime error: ${e instanceof Error ? e.message : String(e)}`;
   }
@@ -99,7 +122,8 @@ function formatAll() {
   const result = format(mappingText.value);
   if (result.ok) mappingText.value = result.formatted;
   if (!inputError.value) {
-    inputText.value = JSON.stringify(JSON.parse(inputText.value), null, 2) + "\n";
+    inputText.value =
+      JSON.stringify(JSON.parse(inputText.value), null, 2) + '\n';
   }
 }
 
@@ -107,6 +131,58 @@ function reset() {
   mappingText.value = DEFAULT_MAPPING;
   inputText.value = DEFAULT_INPUT;
 }
+
+// Deep links: `#code=…` seeds the editors (used by the "open in playground"
+// buttons on doc examples), and Share copies a URL reproducing this state.
+onMounted(() => {
+  const state = decodePlaygroundState(location.hash);
+  if (state) {
+    mappingText.value = state.mapping;
+    inputText.value = state.input;
+  }
+});
+
+const justShared = ref(false);
+async function share() {
+  const hash = `#code=${encodePlaygroundState(mappingText.value, inputText.value)}`;
+  history.replaceState(null, '', hash);
+  await navigator.clipboard.writeText(location.href);
+  justShared.value = true;
+  setTimeout(() => (justShared.value = false), 2000);
+}
+
+const { lang } = useData();
+const ui = computed(() =>
+  lang.value === 'fr'
+    ? {
+        errors: (n: number) => `✖ ${n} erreur(s)`,
+        noErrors: '✔ aucune erreur',
+        format: 'Formater',
+        share: 'Partager',
+        shared: 'Lien copié ✔',
+        reset: "Réinitialiser l'exemple",
+        input: "JSON d'entrée",
+        invalid: 'invalide',
+        mapping: 'Mapping (.typeflow)',
+        output: 'Sortie',
+        inferred: 'Type de sortie inféré',
+        hint: 'indice',
+      }
+    : {
+        errors: (n: number) => `✖ ${n} error(s)`,
+        noErrors: '✔ no errors',
+        format: 'Format',
+        share: 'Share',
+        shared: 'Link copied ✔',
+        reset: 'Reset example',
+        input: 'Input JSON',
+        invalid: 'invalid',
+        mapping: 'Mapping (.typeflow)',
+        output: 'Output',
+        inferred: 'Inferred output type',
+        hint: 'hint',
+      },
+);
 </script>
 
 <template>
@@ -115,30 +191,41 @@ function reset() {
       <div class="tf-title">
         <strong>Typeflow Playground</strong>
         <span class="tf-status" :class="errorCount ? 'bad' : 'good'">
-          {{ errorCount ? `✖ ${errorCount} error(s)` : "✔ no errors" }}
+          {{ errorCount ? ui.errors(errorCount) : ui.noErrors }}
         </span>
       </div>
       <div class="tf-actions">
-        <button class="tf-btn tf-primary" @click="formatAll">Format</button>
-        <button class="tf-btn" @click="reset">Reset example</button>
+        <button class="tf-btn tf-primary" @click="formatAll">
+          {{ ui.format }}
+        </button>
+        <button
+          class="tf-btn"
+          :class="{ 'tf-shared': justShared }"
+          @click="share">
+          {{ justShared ? ui.shared : ui.share }}
+        </button>
+        <button class="tf-btn" @click="reset">{{ ui.reset }}</button>
       </div>
     </div>
 
     <div class="tf-grid">
       <section class="tf-pane">
-        <header>Input JSON <span v-if="inputError" class="tf-badge bad">invalid</span></header>
+        <header>
+          {{ ui.input }}
+          <span v-if="inputError" class="tf-badge bad">{{ ui.invalid }}</span>
+        </header>
         <CodeEditor v-model="inputText" :highlight="highlightJson" />
       </section>
 
       <section class="tf-pane">
-        <header>Mapping (.typeflow)</header>
+        <header>{{ ui.mapping }}</header>
         <CodeEditor v-model="mappingText" :highlight="highlightTypeflow" />
       </section>
 
       <section class="tf-pane">
-        <header>Output</header>
+        <header>{{ ui.output }}</header>
         <pre class="tf-output" v-html="outputHtml"></pre>
-        <header class="tf-subheader">Inferred output type</header>
+        <header class="tf-subheader">{{ ui.inferred }}</header>
         <pre class="tf-output tf-type">{{ inferredType }}</pre>
       </section>
     </div>
@@ -151,7 +238,7 @@ function reset() {
           <span class="tf-sev">{{ d.severity }}</span>
           <span class="tf-code">{{ d.code }}</span>
           <span class="tf-msg">{{ d.message }}</span>
-          <div v-if="d.hint" class="tf-hint">hint: {{ d.hint }}</div>
+          <div v-if="d.hint" class="tf-hint">{{ ui.hint }}: {{ d.hint }}</div>
         </li>
       </ul>
     </section>
@@ -184,11 +271,21 @@ function reset() {
   padding: 2px 10px;
   border-radius: 999px;
 }
-.tf-status.good { background: var(--vp-c-green-soft); color: var(--vp-c-green-1); }
-.tf-status.bad { background: var(--vp-c-red-soft); color: var(--vp-c-red-1); }
+.tf-status.good {
+  background: var(--vp-c-green-soft);
+  color: var(--vp-c-green-1);
+}
+.tf-status.bad {
+  background: var(--vp-c-red-soft);
+  color: var(--vp-c-red-1);
+}
 .tf-actions {
   display: flex;
   gap: 8px;
+}
+.tf-shared {
+  border-color: var(--vp-c-green-1);
+  color: var(--vp-c-green-1);
 }
 .tf-btn {
   font-size: 13px;
@@ -199,7 +296,9 @@ function reset() {
   color: var(--vp-c-text-1);
   cursor: pointer;
 }
-.tf-btn:hover { border-color: var(--vp-c-brand-1); }
+.tf-btn:hover {
+  border-color: var(--vp-c-brand-1);
+}
 .tf-primary {
   background: var(--vp-c-brand-soft);
   color: var(--vp-c-brand-1);
@@ -211,7 +310,9 @@ function reset() {
   gap: 12px;
 }
 @media (max-width: 960px) {
-  .tf-grid { grid-template-columns: 1fr; }
+  .tf-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .tf-pane {
   display: flex;
@@ -222,7 +323,8 @@ function reset() {
   background: var(--vp-c-bg-soft);
   min-height: 480px;
 }
-.tf-pane header, .tf-diagnostics header {
+.tf-pane header,
+.tf-diagnostics header {
   padding: 8px 12px;
   font-size: 12px;
   font-weight: 600;
@@ -234,7 +336,9 @@ function reset() {
   align-items: center;
   gap: 8px;
 }
-.tf-subheader { border-top: 1px solid var(--vp-c-divider); }
+.tf-subheader {
+  border-top: 1px solid var(--vp-c-divider);
+}
 .tf-badge.bad {
   background: var(--vp-c-red-soft);
   color: var(--vp-c-red-1);
@@ -256,7 +360,10 @@ function reset() {
   white-space: pre;
   min-height: 100px;
 }
-.tf-type { flex: 0 1 auto; color: var(--vp-c-brand-1); }
+.tf-type {
+  flex: 0 1 auto;
+  color: var(--vp-c-brand-1);
+}
 .tf-diagnostics {
   border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
@@ -274,11 +381,29 @@ function reset() {
   font-size: 13px;
   display: block;
 }
-.tf-diagnostics li + li { border-top: 1px dashed var(--vp-c-divider); }
-.tf-pos { color: var(--vp-c-text-3); margin-right: 8px; }
-.tf-sev { font-weight: 600; margin-right: 8px; }
-li.error .tf-sev { color: var(--vp-c-red-1); }
-li.warning .tf-sev { color: var(--vp-c-yellow-1); }
-.tf-code { color: var(--vp-c-text-3); margin-right: 8px; }
-.tf-hint { color: var(--vp-c-text-2); padding-left: 16px; }
+.tf-diagnostics li + li {
+  border-top: 1px dashed var(--vp-c-divider);
+}
+.tf-pos {
+  color: var(--vp-c-text-3);
+  margin-right: 8px;
+}
+.tf-sev {
+  font-weight: 600;
+  margin-right: 8px;
+}
+li.error .tf-sev {
+  color: var(--vp-c-red-1);
+}
+li.warning .tf-sev {
+  color: var(--vp-c-yellow-1);
+}
+.tf-code {
+  color: var(--vp-c-text-3);
+  margin-right: 8px;
+}
+.tf-hint {
+  color: var(--vp-c-text-2);
+  padding-left: 16px;
+}
 </style>

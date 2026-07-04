@@ -1,14 +1,37 @@
 /* Typeflow playground token colors (light/dark via VitePress vars). */
-.tok-keyword { color: var(--vp-c-purple-1); font-weight: 600; }
-.tok-prop { color: var(--vp-c-brand-1); }
-.tok-fn { color: var(--vp-c-yellow-1); }
-.tok-string { color: var(--vp-c-green-1); }
-.tok-number { color: var(--vp-c-red-2); }
-.tok-literal { color: var(--vp-c-red-2); font-weight: 600; }
-.tok-type { color: var(--vp-c-green-2); }
-.tok-comment { color: var(--vp-c-text-3); font-style: italic; }
-.tok-punct { color: var(--vp-c-text-2); }
-.tok-ident { color: var(--vp-c-text-1); }
+.tok-keyword {
+  color: var(--vp-c-purple-1);
+  font-weight: 600;
+}
+.tok-prop {
+  color: var(--vp-c-brand-1);
+}
+.tok-fn {
+  color: var(--vp-c-yellow-1);
+}
+.tok-string {
+  color: var(--vp-c-green-1);
+}
+.tok-number {
+  color: var(--vp-c-red-2);
+}
+.tok-literal {
+  color: var(--vp-c-red-2);
+  font-weight: 600;
+}
+.tok-type {
+  color: var(--vp-c-green-2);
+}
+.tok-comment {
+  color: var(--vp-c-text-3);
+  font-style: italic;
+}
+.tok-punct {
+  color: var(--vp-c-text-2);
+}
+.tok-ident {
+  color: var(--vp-c-text-1);
+}
 .tok-error {
   color: var(--vp-c-red-1);
   text-decoration: underline wavy var(--vp-c-red-1);

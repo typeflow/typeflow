@@ -1,0 +1,155 @@
+/* Site-wide polish: hero gradient, home sections, table & heading tweaks. */
+
+:root {
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(
+    120deg,
+    var(--vp-c-brand-1) 30%,
+    #41d1ff
+  );
+  --vp-home-hero-image-background-image: linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--vp-c-brand-1) 45%, transparent) 40%,
+    #41d1ff55 60%
+  );
+  --vp-home-hero-image-filter: blur(48px);
+}
+@media (min-width: 640px) {
+  :root {
+    --vp-home-hero-image-filter: blur(60px);
+  }
+}
+
+/* Home page: markdown sections below the hero get a centered column. */
+.home-section {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 8px 24px 0;
+}
+@media (min-width: 640px) {
+  .home-section {
+    padding: 8px 48px 0;
+  }
+}
+@media (min-width: 960px) {
+  .home-section {
+    padding: 8px 64px 0;
+  }
+}
+.home-section h2 {
+  border-top: none;
+  margin-top: 48px;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+.home-section .h2-sub {
+  color: var(--vp-c-text-2);
+  margin-top: -8px;
+  max-width: 720px;
+}
+.home-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 24px 0 64px;
+}
+.home-cta a {
+  display: inline-block;
+  padding: 9px 22px;
+  border-radius: 22px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition:
+    opacity 0.15s,
+    border-color 0.15s;
+}
+.home-cta a.primary {
+  background: var(--vp-c-brand-1);
+  color: var(--vp-c-white);
+}
+.home-cta a.primary:hover {
+  opacity: 0.85;
+}
+.home-cta a.alt {
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+}
+.home-cta a.alt:hover {
+  border-color: var(--vp-c-brand-1);
+}
+
+/* Third-level sidebar items (operator / category sub-items): a thin indent
+   rail, tighter type, and styled chips instead of raw text. */
+.VPSidebarItem.level-1 > .items {
+  margin-left: 2px;
+  padding-left: 12px;
+  border-left: 1px solid var(--vp-c-divider);
+}
+.VPSidebarItem.level-2 .item {
+  padding-left: 0;
+}
+.VPSidebarItem.level-2 .text {
+  font-size: 12.5px;
+  line-height: 26px;
+}
+/* Operator chips: real code tokens, not floating sans-serif dots. */
+.sb-op {
+  display: inline-block;
+  font-family: var(--vp-font-family-mono), monospace;
+  font-size: 11px;
+  line-height: 18px;
+  padding: 0 7px;
+  border-radius: 5px;
+  background: var(--vp-c-default-soft);
+  color: var(--vp-c-text-2);
+  transition:
+    color 0.15s,
+    background-color 0.15s;
+}
+.VPSidebarItem.level-2 .link:hover .sb-op {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+/* Category counters: how many functions live under each category. */
+.sb-count {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10px;
+  line-height: 15px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--vp-c-default-soft);
+  color: var(--vp-c-text-3);
+  vertical-align: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.VPSidebarItem.level-2 .link:hover .sb-count {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+
+/* Pages carrying the .tf-wide marker span the full viewport (minus the
+   sidebar): the width caps of the doc layout are lifted, prose keeps a
+   readable measure, tools and tables get the whole width. */
+.VPDoc:has(.tf-wide) .container,
+.VPDoc:has(.tf-wide) .content,
+.VPDoc:has(.tf-wide) .content-container {
+  max-width: none !important;
+}
+.VPDoc:has(.tf-wide) .vp-doc > p {
+  max-width: 82ch;
+}
+
+/* Function reference pages: tighten the name heading over its signature card. */
+.vp-doc h4 code {
+  font-size: 0.95em;
+}
+
+/* Diagnostics reference: severity badges sit inside headings. */
+.vp-doc h2 .VPBadge {
+  vertical-align: middle;
+  margin-left: 8px;
+  transform: translateY(-2px);
+}
