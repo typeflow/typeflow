@@ -6,7 +6,7 @@ Typeflow is a declarative mapping language for JSON with first-class TypeScript 
 
 **[▶ Try it in the Playground](https://thomasfarineau.github.io/typeflow/playground)** · [Documentation](https://thomasfarineau.github.io/typeflow/)
 
-You've written this function a hundred times: take the API's JSON, reshape it into the type your app wants. It's boring, it's error-prone, and when the API changes, TypeScript can't tell you which of your forty mapping functions just broke. JSONata and jq make the transformation declarative — but invisible to your compiler. Typeflow makes it declarative *and* typed: paths autocomplete, typos are compile errors, output types are inferred, and your mappings are artifacts you can test, diff, and trust.
+You've written this function a hundred times: take the API's JSON, reshape it into the type your app wants. It's boring, it's error-prone, and when the API changes, TypeScript can't tell you which of your forty mapping functions just broke. JSONata and jq make the transformation declarative — but invisible to your compiler. Typeflow makes it declarative _and_ typed: paths autocomplete, typos are compile errors, output types are inferred, and your mappings are artifacts you can test, diff, and trust.
 
 ```
 Input JSON shape → .typeflow mapping file → Typed output shape
@@ -65,7 +65,7 @@ $ typeflow infer user.typeflow
 ## How it works
 
 1. **Bind the input.** `input user: ApiUser from "./user-types"` extracts the type through the TypeScript compiler API (inline structural declarations work too).
-2. **Check the mapping.** Every path is validated against the input type. Optional segments require `?.` or a `??` default — and a default *removes* the optionality from the output type.
+2. **Check the mapping.** Every path is validated against the input type. Optional segments require `?.` or a `??` default — and a default _removes_ the optionality from the output type.
 3. **Infer the output.** `typeflow types` emits a `user.d.typeflow.ts` declaration, so `import mapUser from "./user.typeflow"` is fully typed (via TypeScript's `allowArbitraryExtensions`).
 4. **Run it anywhere.** Compiled mappings are JSON-serializable and executed by a small, deterministic, dependency-free interpreter — Node, Bun, browsers, CI.
 
@@ -96,66 +96,66 @@ preload = ["./typeflow-preload.ts"]
 
 ```ts
 // typeflow-preload.ts
-import { plugin } from "bun";
-import { typeflowPlugin } from "@thomasfarineau/typeflow-bun-plugin";
+import { plugin } from 'bun';
+import { typeflowPlugin } from '@thomasfarineau/typeflow-bun-plugin';
 plugin(typeflowPlugin());
 ```
 
 ```ts
-import mapUser from "./user.typeflow"; // (input: Input) => Output — fully typed
+import mapUser from './user.typeflow'; // (input: Input) => Output — fully typed
 ```
 
 ### Programmatic API
 
 ```ts
-import { loadTypeflowMapping } from "@thomasfarineau/typeflow";
+import { loadTypeflowMapping } from '@thomasfarineau/typeflow';
 
-const mapUser = await loadTypeflowMapping("./user.typeflow");
+const mapUser = await loadTypeflowMapping('./user.typeflow');
 const view = mapUser(apiResponse);
 ```
 
 ## The language (v0.1)
 
-| Feature | Example |
-|---|---|
-| Path access | `user.address.city` |
-| Optional access | `user.contact?.email` (required when the path is optional) |
-| Defaults | `country ?? "unknown"` (removes optionality from the output type) |
-| Computed fields | `user.firstName + " " + user.lastName` |
-| Conditionals | `user.n > 10 ? "big" : "small"` |
-| Array filtering | `user.labels[active]` (predicate in element scope) |
-| Array indexing | `user.labels[0]` (typed as `element \| undefined`) |
-| Array path mapping | `user.labels.name` → `string[]` |
-| Projection | `user.items -> { label: upper(name) }` |
-| Functions | `upper`, `lower`, `trim`, `count`, `sum`, `join` |
-| Comparisons | `==` `!=` `<` `<=` `>` `>=` (no-overlap comparisons are flagged) |
+| Feature            | Example                                                           |
+| ------------------ | ----------------------------------------------------------------- |
+| Path access        | `user.address.city`                                               |
+| Optional access    | `user.contact?.email` (required when the path is optional)        |
+| Defaults           | `country ?? "unknown"` (removes optionality from the output type) |
+| Computed fields    | `user.firstName + " " + user.lastName`                            |
+| Conditionals       | `user.n > 10 ? "big" : "small"`                                   |
+| Array filtering    | `user.labels[active]` (predicate in element scope)                |
+| Array indexing     | `user.labels[0]` (typed as `element \| undefined`)                |
+| Array path mapping | `user.labels.name` → `string[]`                                   |
+| Projection         | `user.items -> { label: upper(name) }`                            |
+| Functions          | `upper`, `lower`, `trim`, `count`, `sum`, `join`                  |
+| Comparisons        | `==` `!=` `<` `<=` `>` `>=` (no-overlap comparisons are flagged)  |
 
 Deliberately **not** a programming language: no loops, no mutation, no recursion, no I/O, no inline lambdas. Mappings are deterministic and sandboxable by construction.
 
 ## Why not …?
 
-| | Typeflow | JSONata | jq | Zod | Plain TS function |
-|---|---|---|---|---|---|
-| Declarative transformation | ✅ | ✅ | ✅ | ❌ (validation) | ❌ |
-| Input paths statically validated | ✅ | ❌ | ❌ | n/a | ✅ |
-| Output type inferred | ✅ | ❌ | ❌ | ⚠️ declared | ✅ |
-| Serializable / sandboxable artifact | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Deterministic by design | ✅ | ⚠️ | ✅ | n/a | ❌ |
+|                                     | Typeflow | JSONata | jq  | Zod             | Plain TS function |
+| ----------------------------------- | -------- | ------- | --- | --------------- | ----------------- |
+| Declarative transformation          | ✅       | ✅      | ✅  | ❌ (validation) | ❌                |
+| Input paths statically validated    | ✅       | ❌      | ❌  | n/a             | ✅                |
+| Output type inferred                | ✅       | ❌      | ❌  | ⚠️ declared     | ✅                |
+| Serializable / sandboxable artifact | ✅       | ✅      | ✅  | ❌              | ❌                |
+| Deterministic by design             | ✅       | ⚠️      | ✅  | n/a             | ❌                |
 
-Zod is a natural *input* to Typeflow, not a competitor: Zod answers "is this X?"; Typeflow answers "how does X become Y, and is that conversion sound?"
+Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"; Typeflow answers "how does X become Y, and is that conversion sound?"
 
 ## Monorepo layout
 
-| Package | Responsibility |
-|---|---|
-| `@thomasfarineau/typeflow` | Umbrella: compiler + runtime + adapters + plugin, one install |
-| `@thomasfarineau/typeflow-core` | Type model, AST/IR, diagnostics. Zero dependencies |
-| `@thomasfarineau/typeflow-parser` | Lexer + recursive-descent parser |
-| `@thomasfarineau/typeflow-compiler` | Binding, semantic analysis, type inference, `.d.ts` emission |
-| `@thomasfarineau/typeflow-runtime` | Deterministic IR interpreter. Zero dependencies, browser-safe |
-| `@thomasfarineau/typeflow-adapter-typescript` | `input x: T from "./mod"` via the TS compiler API |
-| `@thomasfarineau/typeflow-cli` | `check` / `infer` / `types` / `run` / `watch` / `init` |
-| `@thomasfarineau/typeflow-bun-plugin` | Import `.typeflow` files directly in Bun |
+| Package                                       | Responsibility                                                |
+| --------------------------------------------- | ------------------------------------------------------------- |
+| `@thomasfarineau/typeflow`                    | Umbrella: compiler + runtime + adapters + plugin, one install |
+| `@thomasfarineau/typeflow-core`               | Type model, AST/IR, diagnostics. Zero dependencies            |
+| `@thomasfarineau/typeflow-parser`             | Lexer + recursive-descent parser                              |
+| `@thomasfarineau/typeflow-compiler`           | Binding, semantic analysis, type inference, `.d.ts` emission  |
+| `@thomasfarineau/typeflow-runtime`            | Deterministic IR interpreter. Zero dependencies, browser-safe |
+| `@thomasfarineau/typeflow-adapter-typescript` | `input x: T from "./mod"` via the TS compiler API             |
+| `@thomasfarineau/typeflow-cli`                | `check` / `infer` / `types` / `run` / `watch` / `init`        |
+| `@thomasfarineau/typeflow-bun-plugin`         | Import `.typeflow` files directly in Bun                      |
 
 ## Development
 
