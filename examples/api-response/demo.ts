@@ -1,6 +1,9 @@
+import {
+  compileTypeflowFile,
+  createMapping,
+  typeToString,
+} from "@thomasfarineau/typeflow";
 import { fileURLToPath } from "node:url";
-import { typeToString } from "@thomasfarineau/typeflow-core";
-import { compileTypeflowFile, createMapping } from "@thomasfarineau/typeflow";
 import sample from "./sample.json";
 
 const file = fileURLToPath(new URL("./user.typeflow", import.meta.url));

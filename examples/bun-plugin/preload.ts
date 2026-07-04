@@ -1,4 +1,4 @@
 import { plugin } from "bun";
-import { typeflowPlugin } from "@thomasfarineau/typeflow-bun-plugin";
+import { typeflowPlugin } from "@thomasfarineau/typeflow/plugin";
 
 plugin(typeflowPlugin());
