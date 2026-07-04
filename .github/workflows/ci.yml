@@ -2,19 +2,26 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      -
+        uses: actions/checkout@v6
+      -
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - run: bun install --frozen-lockfile
-      - run: bun run check
-      - run: bun run typecheck
-      - run: bun src/cli/main.ts check "examples/**/*.typeflow"
-      - run: bun src/cli/main.ts types "examples/**/*.typeflow" --check
+      -
+        run: bun install --frozen-lockfile
+      -
+        run: bun run check
+      -
+        run: bun run typecheck
+      -
+        run: bun src/cli/main.ts check "examples/**/*.typeflow"
+      -
+        run: bun src/cli/main.ts types "examples/**/*.typeflow" --check
