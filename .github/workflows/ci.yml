@@ -14,7 +14,7 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      - run: bun test
+      - run: bun run check
       - run: bun run typecheck
-      - run: bun packages/cli/src/main.ts check "examples/**/*.typeflow"
-      - run: bun packages/cli/src/main.ts types "examples/**/*.typeflow" --check
+      - run: bun src/cli/main.ts check "examples/**/*.typeflow"
+      - run: bun src/cli/main.ts types "examples/**/*.typeflow" --check
