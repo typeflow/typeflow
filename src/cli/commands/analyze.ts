@@ -44,8 +44,23 @@ function summarize(reports: FileReport[]): {
   return { errors, warnings };
 }
 
-export async function cmdCheck(patterns: string[]): Promise<void> {
+export async function cmdCheck(
+  patterns: string[],
+  json = false,
+): Promise<void> {
   const reports = await compileAll(patterns);
+
+  if (json) {
+    let errors = 0;
+    const out = reports.map((r) => {
+      errors += countBySeverity(r.result.diagnostics).errors;
+      return { file: r.fileName, diagnostics: r.result.diagnostics };
+    });
+    console.log(JSON.stringify(out));
+    if (errors > 0) process.exit(1);
+    return;
+  }
+
   const { errors, warnings } = summarize(reports);
   const suffix = warnings ? `, ${warnings} warning(s)` : '';
   if (errors > 0) {

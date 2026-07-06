@@ -8,7 +8,7 @@ import { cmdRun } from './commands/run';
 const HELP = `typeflow — typed JSON transformations, checked at compile time
 
 Usage:
-  typeflow check [patterns...]           Analyze mappings and report diagnostics
+  typeflow check [patterns...] [--json]  Analyze mappings and report diagnostics
   typeflow types [patterns...] [--check] Generate .d.typeflow.ts declaration files
   typeflow infer <file>                  Print the inferred output type of a mapping
   typeflow run <file> [--input <json>]   Execute a mapping (input from file or stdin)
@@ -53,7 +53,7 @@ async function main(): Promise<void> {
 
   switch (command) {
     case 'check':
-      return cmdCheck(positional);
+      return cmdCheck(positional, flags.get('json') === true);
     case 'types':
       return cmdTypes(positional, flags.get('check') === true);
     case 'infer':
