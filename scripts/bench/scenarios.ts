@@ -1,9 +1,10 @@
 /**
- * Benchmark scenarios: the SAME transformation written three ways — a
- * Typeflow mapping, a JSONata expression, and a hand-written JS function
- * (the native ceiling). The docs' benchmark page runs them in the visitor's
- * browser; scripts/generate-docs.ts verifies at build time that all three
- * produce identical output, so the page can't compare apples to oranges.
+ * Benchmark scenarios: the SAME transformation written four ways — a
+ * Typeflow mapping, a JSONata expression, a jq filter converted to Typeflow,
+ * and a hand-written JS function (the native ceiling). The docs' benchmark
+ * page runs them in the visitor's browser; scripts/generate-docs.ts verifies
+ * at build time that all four produce identical output, so the page can't
+ * compare apples to oranges.
  */
 
 export interface BenchScenario {
@@ -14,6 +15,10 @@ export interface BenchScenario {
   typeflow: string;
   /** Equivalent JSONata expression (parsed once, evaluated per iteration). */
   jsonata: string;
+  /** Equivalent jq filter (converted to Typeflow once, run per iteration). */
+  jq: string;
+  /** Name of the Typeflow input binding used when compiling the jq conversion. */
+  inputName: string;
   /** Equivalent hand-written function — displayed via String(js). */
   js: (input: never) => unknown;
   /** Deterministic input generator; n scales the array sizes. */
@@ -74,6 +79,15 @@ map {
   "activeTags": [labels[active].name],
   "total": $sum(scores)
 }`,
+    jq: `{
+  id: .id,
+  fullName: (.firstName + " " + .lastName),
+  isAdmin: (.role == "admin"),
+  email: (.contact.email // "unknown"),
+  activeTags: .labels[] | select(.active == true) | .name,
+  total: .scores | add
+}`,
+    inputName: 'user',
     js: (user: User) => ({
       id: user.id,
       fullName: user.firstName + ' ' + user.lastName,
@@ -125,6 +139,15 @@ map {
   "stockValue": $sum(products[inStock].price),
   "featured": [products[price >= $$.threshold].{ "label": $uppercase(name), "price": price }]
 }`,
+    jq: `{
+  inStock: .products[] | select(.inStock == true) | length,
+  stockValue: .products[] | select(.inStock == true) | .price | add,
+  featured: .products[] | select(.price >= 50) | {
+    label: (.name | ascii_upcase),
+    price: .price
+  }
+}`,
+    inputName: 'data',
     js: (data: Catalog) => {
       const inStock = data.products.filter((p) => p.inStock);
       return {

@@ -5,6 +5,7 @@ import {
 } from '../../../scripts/bench/scenarios';
 import { computed, reactive, ref } from 'vue';
 import { compile } from '@thomasfarineau/typeflow-compiler';
+import { convertJq } from '@thomasfarineau/typeflow-converter';
 import { createMapping } from '@thomasfarineau/typeflow-runtime';
 import { highlightTypeflow } from './highlight';
 import jsonata from 'jsonata';
@@ -21,9 +22,14 @@ const ui = computed(() =>
         opsSec: 'ops/s',
         fastest: 'le plus rapide',
         prepare: 'coût unique (compilation / parse)',
-        engines: { tf: 'Typeflow', jn: 'JSONata', js: 'JS natif' },
+        engines: {
+          tf: 'Typeflow',
+          jq: 'jq',
+          jn: 'JSONata',
+          js: 'JS natif',
+        },
         mismatch:
-          'Les trois implémentations ne produisent pas la même sortie — benchmark annulé.',
+          'Les quatre implémentations ne produisent pas la même sortie — benchmark annulé.',
         verified: 'sorties identiques vérifiées avant mesure ✔',
       }
     : {
@@ -33,15 +39,20 @@ const ui = computed(() =>
         opsSec: 'ops/s',
         fastest: 'fastest',
         prepare: 'one-time cost (compile / parse)',
-        engines: { tf: 'Typeflow', jn: 'JSONata', js: 'Native JS' },
+        engines: {
+          tf: 'Typeflow',
+          jq: 'jq',
+          jn: 'JSONata',
+          js: 'Native JS',
+        },
         mismatch:
-          'The three implementations disagree on the output — benchmark aborted.',
+          'The four implementations disagree on the output — benchmark aborted.',
         verified: 'identical outputs verified before measuring ✔',
       },
 );
 
-type EngineId = 'js' | 'tf' | 'jn';
-const ENGINE_ORDER: EngineId[] = ['js', 'tf', 'jn'];
+type EngineId = 'js' | 'tf' | 'jq' | 'jn';
+const ENGINE_ORDER: EngineId[] = ['js', 'tf', 'jq', 'jn'];
 
 interface EngineResult {
   engine: EngineId;
@@ -50,7 +61,7 @@ interface EngineResult {
 }
 interface ScenarioState {
   size: number;
-  tab: 'tf' | 'jn' | 'js';
+  tab: 'tf' | 'jq' | 'jn' | 'js';
   status: 'idle' | 'running' | 'done' | 'error';
   current: EngineId | null;
   results: EngineResult[];
@@ -75,10 +86,21 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function codeHtml(s: BenchScenario, tab: 'tf' | 'jn' | 'js'): string {
+function codeHtml(
+  s: BenchScenario,
+  tab: 'tf' | 'jq' | 'jn' | 'js',
+): string {
   if (tab === 'tf') return highlightTypeflow(s.typeflow);
+  if (tab === 'jq') return escapeHtml(s.jq);
   if (tab === 'jn') return escapeHtml(s.jsonata);
   return escapeHtml(String(s.js));
+}
+
+function inputDeclaration(source: string): string {
+  const marker = '\n\nmap';
+  const end = source.indexOf(marker);
+  if (end === -1) throw new Error('Benchmark scenario is missing a map block.');
+  return source.slice(0, end).trim();
 }
 
 const yieldToUi = () => new Promise((r) => setTimeout(r));
@@ -143,15 +165,32 @@ async function run(s: BenchScenario): Promise<void> {
       return createMapping(r.compiled!);
     });
     const prepareJn = timePrepare(() => jsonata(s.jsonata));
+    const prepareJq = timePrepare(() => {
+      const converted = convertJq(s.jq, {
+        input: 'none',
+        inputName: s.inputName,
+      });
+      const source = `${inputDeclaration(s.typeflow)}\n\n${converted.typeflow}`;
+      return createMapping(compile(source).compiled!);
+    });
     const tfRun = createMapping(compile(s.typeflow).compiled!);
     const jnExpr = jsonata(s.jsonata);
+    const jqConverted = convertJq(s.jq, {
+      input: 'none',
+      inputName: s.inputName,
+    });
+    const jqRun = createMapping(
+      compile(`${inputDeclaration(s.typeflow)}\n\n${jqConverted.typeflow}`)
+        .compiled!,
+    );
     const jsFn = s.js as (i: unknown) => unknown;
 
     // The page's whole premise: same output. Re-check on THIS input size.
     const a = JSON.stringify(tfRun(input));
     const b = JSON.stringify(jsFn(input));
     const c = JSON.stringify(await jnExpr.evaluate(input));
-    if (a !== b || b !== c) {
+    const d = JSON.stringify(jqRun(input));
+    if (a !== b || b !== c || b !== d) {
       st.status = 'error';
       return;
     }
@@ -161,12 +200,15 @@ async function run(s: BenchScenario): Promise<void> {
     const js = await measureSync(() => jsFn(input));
     st.current = 'tf';
     const tf = await measureSync(() => tfRun(input));
+    st.current = 'jq';
+    const jq = await measureSync(() => jqRun(input));
     st.current = 'jn';
     const jn = await measureAsync(() => jnExpr.evaluate(input));
 
     st.results = [
       { engine: 'js', opsSec: js, prepareMs: null },
       { engine: 'tf', opsSec: tf, prepareMs: prepareTf },
+      { engine: 'jq', opsSec: jq, prepareMs: prepareJq },
       { engine: 'jn', opsSec: jn, prepareMs: prepareJn },
     ];
     st.status = 'done';
@@ -205,7 +247,7 @@ function relOf(st: ScenarioState, r: EngineResult): number {
 
       <div class="bench-tabs" role="tablist">
         <button
-          v-for="t in ['tf', 'jn', 'js'] as const"
+          v-for="t in ['tf', 'jq', 'jn', 'js'] as const"
           :key="t"
           class="bench-tab"
           :class="{ active: states[s.id]!.tab === t }"
@@ -292,6 +334,11 @@ function relOf(st: ScenarioState, r: EngineResult): number {
             fmtMs(
               states[s.id]!.results.find((r) => r.engine === 'jn')!.prepareMs!,
             )
+          }}, jq:
+          {{
+            fmtMs(
+              states[s.id]!.results.find((r) => r.engine === 'jq')!.prepareMs!,
+            )
           }}
           · {{ ui.verified }}
         </p>
@@ -305,6 +352,7 @@ function relOf(st: ScenarioState, r: EngineResult): number {
   /* Categorical engine palette — validated for CVD + contrast (light). */
   --bench-js: #0d9488;
   --bench-tf: #3451b2;
+  --bench-jq: #7c3aed;
   --bench-jn: #b45309;
   display: flex;
   flex-direction: column;
@@ -315,6 +363,7 @@ function relOf(st: ScenarioState, r: EngineResult): number {
   /* Dark-mode steps validated against the dark surface — not a naive flip. */
   --bench-js: #0d9488;
   --bench-tf: #5c7cfa;
+  --bench-jq: #a78bfa;
   --bench-jn: #d97706;
 }
 .bench-card {
@@ -463,6 +512,9 @@ function relOf(st: ScenarioState, r: EngineResult): number {
 .sw-tf {
   background: var(--bench-tf);
 }
+.sw-jq {
+  background: var(--bench-jq);
+}
 .sw-jn {
   background: var(--bench-jn);
 }
@@ -489,6 +541,9 @@ function relOf(st: ScenarioState, r: EngineResult): number {
 }
 .bar-tf {
   background: var(--bench-tf);
+}
+.bar-jq {
+  background: var(--bench-jq);
 }
 .bar-jn {
   background: var(--bench-jn);

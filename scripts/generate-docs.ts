@@ -5,6 +5,7 @@
  *    index.md (searchable FnIndex) and custom.md
  *  - reference/diagnostics.md — every TF-code, from scripts/doc-pages/diagnostics.ts
  *  - migration/jsonata.md
+ *  - migration/jq.md
  * Nothing under these directories is written by hand (all are gitignored).
  * Run with: bun scripts/generate-docs (wired into docs:gen / docs:dev / docs:build).
  *
@@ -19,6 +20,7 @@ import {
   FR_DIAGNOSTICS_INTRO,
   FR_FUNCTIONS_INDEX_INTRO,
   FR_LABELS,
+  frJqMigrationBody,
   frMigrationBody,
 } from './doc-pages/i18n/fr-pages';
 import {
@@ -37,7 +39,7 @@ import { BENCH_SCENARIOS } from './bench/scenarios';
 import { type Builtin } from '../src/builtins/types';
 import { BUILTIN_GROUPS } from '../src/builtins/index';
 import { compile } from '../src/compiler/index';
-import { convertJsonata } from '../src/converter';
+import { convertJq, convertJsonata } from '../src/converter';
 import { createMapping } from '../src/runtime/index';
 import { DIAGNOSTICS } from './doc-pages/diagnostics';
 import { fileURLToPath } from 'node:url';
@@ -46,7 +48,8 @@ import { FR_DIAGNOSTICS } from './doc-pages/i18n/fr-diagnostics';
 import { FR_OPERATOR_PAGES } from './doc-pages/i18n/fr-operators';
 import { join } from 'node:path';
 import jsonata from 'jsonata';
-import { MIGRATION_EXAMPLES } from '../src/converter/examples';
+import { JQ_MIGRATION_EXAMPLES } from '../src/converter/jq/examples';
+import { MIGRATION_EXAMPLES } from '../src/converter/jsonata/examples';
 
 type Locale = 'en' | 'fr';
 const LOCALES: Locale[] = ['en', 'fr'];
@@ -529,6 +532,133 @@ Every row above and this whole example are **converted and type-checked by the r
 `;
 }
 
+// ---- migration/jq.md: every example is converted by the real jq converter
+// ---- at generation time, then compiled.
+
+function verifyJqMigrationExamples(): { jq: string; typeflow: string } {
+  for (const ex of JQ_MIGRATION_EXAMPLES) {
+    const converted = convertJq(ex.jq, { input: 'none' });
+    if (!converted.ok) {
+      throw new Error(
+        `jq migration example '${ex.title}' failed to convert: ${converted.errors.join('; ')}`,
+      );
+    }
+    const source = `input data: ${ex.inputType}\n\n${converted.typeflow.trim()}`;
+    const errors = compile(source).diagnostics.filter(
+      (d) => d.severity === 'error',
+    );
+    if (errors.length > 0) {
+      throw new Error(
+        `jq migration example '${ex.title}' does not compile: ${errors[0]!.message}`,
+      );
+    }
+  }
+
+  const worked = JQ_MIGRATION_EXAMPLES.find(
+    (e) => e.title === 'Putting it together',
+  );
+  if (!worked) {
+    throw new Error("Missing jq 'Putting it together' migration example.");
+  }
+  const workedSource = `input data: ${worked.inputType}\n\n${convertJq(worked.jq, {
+    input: 'none',
+  }).typeflow.trim()}`;
+  return {
+    jq: worked.jq,
+    typeflow: format(workedSource).formatted.trim(),
+  };
+}
+
+function renderJqMigrationPage(
+  locale: Locale,
+  worked: { jq: string; typeflow: string },
+): string {
+  const workedBody =
+    JQ_MIGRATION_EXAMPLES.find((e) => e.title === 'Putting it together')
+      ?.body ?? '';
+
+  const head = (title: string) => `---
+order: 2
+aside: false
+outline: false
+editLink: false
+lastUpdated: false
+---
+
+${BANNER}
+
+<div class="tf-wide"></div>
+
+# ${title}`;
+
+  if (locale === 'fr') {
+    return `${head(FR_LABELS.migrationJqTitle)}
+
+${frJqMigrationBody(worked)}
+`;
+  }
+
+  return `${head('From jq')}
+
+Use this page when a jq filter is really a data mapping: object reshaping, path reads, array filters, projections, sorting, and simple function calls. The converter targets the declarative subset and rejects unsupported jq constructs instead of guessing.
+
+## What converts
+
+| jq | Typeflow | Notes |
+| --- | --- | --- |
+| \`{ a: .x }\`, \`[.x, .y]\` | \`{ a: data.x }\`, \`[data.x, data.y]\` | object & array constructors |
+| \`.a.b.c\` | \`data.a.b.c\` | root-relative paths get the input prefix |
+| \`.items[]\` | \`data.items\` | array iteration is represented as the array value |
+| \`.items[] \\| select(.price > 10)\` | \`data.items[price > 10]\` | jq \`select\` -> Typeflow filter |
+| \`.items[] \\| select(...) \\| .name\` | \`data.items[...].name\` | filter followed by field extraction |
+| \`.items \\| map({ id: .id })\` | \`data.items -> { id: id }\` | jq \`map\` -> projection |
+| \`.orders \\| sort_by(.total)\` | \`data.orders ^(total)\` | jq \`sort_by\` -> order-by |
+| \`.totals \\| add\` | \`sum(data.totals)\` | \`add\` maps to numeric sum |
+| \`length\`, \`tostring\`, \`tonumber\` | \`count(x)\`, \`string(x)\`, \`number(x)\` | jq filter functions become Typeflow function calls |
+| \`floor\`, \`ceil\`, \`round\`, \`sqrt\` | same names | numeric functions |
+| \`keys\`, \`reverse\`, \`unique\` | \`keys\`, \`reverse\`, \`distinct\` | object/array helpers |
+| \`join\`, \`split\`, \`contains\` | same names | string/array helpers |
+| \`== != < <= > >=\` | same operators | comparisons |
+| \`and\`, \`or\`, \`not\` | \`&&\`, \`\\|\\|\`, \`!\` | boolean logic |
+| \`+ - * / %\` | same operators | arithmetic |
+
+## What doesn't
+
+Unsupported jq features come back in \`errors\`, so generated docs and migrations fail loudly instead of shipping a bad mapping.
+
+| jq | Why | Do this instead |
+| --- | --- | --- |
+| \`reduce\`, \`foreach\`, recursive descent \`..\` | iterative / recursive control flow | a [\`fn\`](/functions/custom) or [\`use\`](/functions/custom#use) function |
+| \`as $x\`, variables, destructuring | no equivalent scope model yet | rewrite as a Typeflow \`let\` or projection |
+| update assignments \`|=\`, \`+=\`, \`del\` | mutation-oriented jq | express the desired output object directly |
+| optional paths \`.a?\` and \`try/catch\` | error-handling semantics differ | model optionality with Typeflow \`?.\` and \`??\` |
+| dynamic keys and string interpolation | dynamic output shape | keep output keys literal or use a custom function |
+| modules/imports | external jq runtime feature | use Typeflow [custom functions](/functions/custom) |
+
+## Worked example
+
+${workedBody}
+
+**jq**
+
+\`\`\`
+${worked.jq}
+\`\`\`
+
+**Typeflow** (exactly what the converter emits)
+
+\`\`\`typeflow
+${worked.typeflow}
+\`\`\`
+
+Every row above and this whole example are **converted and type-checked by the real jq converter when these docs are built**.
+
+## Playground
+
+<JqPlayground />
+`;
+}
+
 // ---- reference/diagnostics.md: every entry is VERIFIED — its example is
 // ---- compiled and must emit its code; and every TF-code that appears in
 // ---- src/ must be documented. Drift fails the docs build.
@@ -632,8 +762,15 @@ ${sections.join('\n\n')}
 `;
 }
 
-// ---- benchmark scenarios: the /benchmark page claims "same output, three
-// ---- engines" — prove it here, or fail the docs build.
+function inputDeclaration(source: string): string {
+  const marker = '\n\nmap';
+  const end = source.indexOf(marker);
+  if (end === -1) throw new Error('Benchmark scenario is missing a map block.');
+  return source.slice(0, end).trim();
+}
+
+// ---- benchmark scenarios: the /benchmark page claims "same output, four
+// ---- implementations" — prove it here, or fail the docs build.
 
 async function verifyBenchScenarios(): Promise<void> {
   for (const s of BENCH_SCENARIOS) {
@@ -649,9 +786,27 @@ async function verifyBenchScenarios(): Promise<void> {
       const tf = JSON.stringify(createMapping(res.compiled!)(input));
       const js = JSON.stringify((s.js as (i: unknown) => unknown)(input));
       const jn = JSON.stringify(await jsonata(s.jsonata).evaluate(input));
-      if (tf !== js || js !== jn) {
+      const jqConverted = convertJq(s.jq, {
+        input: 'none',
+        inputName: s.inputName,
+      });
+      if (!jqConverted.ok) {
         throw new Error(
-          `Benchmark scenario '${s.id}' (n=${n}) is not equivalent across engines:\n  typeflow: ${tf.slice(0, 120)}\n  js:       ${js.slice(0, 120)}\n  jsonata:  ${jn.slice(0, 120)}`,
+          `Benchmark scenario '${s.id}' jq filter does not convert: ${jqConverted.errors.join('; ')}`,
+        );
+      }
+      const jqSource = `${inputDeclaration(s.typeflow)}\n\n${jqConverted.typeflow}`;
+      const jqRes = compile(jqSource);
+      const jqErrors = jqRes.diagnostics.filter((d) => d.severity === 'error');
+      if (jqErrors.length > 0) {
+        throw new Error(
+          `Benchmark scenario '${s.id}' converted jq does not compile: ${jqErrors[0]!.message}`,
+        );
+      }
+      const jq = JSON.stringify(createMapping(jqRes.compiled!)(input));
+      if (tf !== js || js !== jn || js !== jq) {
+        throw new Error(
+          `Benchmark scenario '${s.id}' (n=${n}) is not equivalent across implementations:\n  typeflow: ${tf.slice(0, 120)}\n  js:       ${js.slice(0, 120)}\n  jsonata:  ${jn.slice(0, 120)}\n  jq:       ${jq.slice(0, 120)}`,
         );
       }
     }
@@ -663,6 +818,7 @@ async function verifyBenchScenarios(): Promise<void> {
 verifyDiagnosticsRegistry();
 await verifyBenchScenarios();
 const worked = verifyMigrationExamples();
+const workedJq = verifyJqMigrationExamples();
 
 for (const locale of LOCALES) {
   const operatorsDir = docsDir(locale, 'operators');
@@ -704,6 +860,11 @@ for (const locale of LOCALES) {
     'utf8',
   );
   writeFileSync(
+    join(migrationDir, 'jq.md'),
+    renderJqMigrationPage(locale, workedJq),
+    'utf8',
+  );
+  writeFileSync(
     join(referenceDir, 'diagnostics.md'),
     renderDiagnosticsPage(locale),
     'utf8',
@@ -715,5 +876,5 @@ const fnCount = BUILTIN_GROUPS.reduce(
   0,
 );
 console.log(
-  `✔ generated en + fr: ${DOC_PAGES.length} operator pages, ${BUILTIN_GROUPS.length} function groups (${fnCount} functions) + index + custom, migration (${MIGRATION_EXAMPLES.length} verified examples), diagnostics (${DIAGNOSTICS.length} verified codes) — per locale`,
+  `✔ generated en + fr: ${DOC_PAGES.length} operator pages, ${BUILTIN_GROUPS.length} function groups (${fnCount} functions) + index + custom, migration (${MIGRATION_EXAMPLES.length + JQ_MIGRATION_EXAMPLES.length} verified examples), diagnostics (${DIAGNOSTICS.length} verified codes) — per locale`,
 );

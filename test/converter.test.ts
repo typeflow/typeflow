@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { compile } from '../src/compiler/index';
 import { convertJsonata } from '../src/converter';
 import { createMapping } from '../src/runtime/index';
-import { MIGRATION_EXAMPLES } from '../src/converter/examples';
+import { MIGRATION_EXAMPLES } from '../src/converter/jsonata/examples';
 
 /** Convert, compile with an input declaration, and run against real data. */
 function convertAndRun(

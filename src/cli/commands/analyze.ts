@@ -54,7 +54,12 @@ export async function cmdCheck(
     let errors = 0;
     const out = reports.map((r) => {
       errors += countBySeverity(r.result.diagnostics).errors;
-      return { file: r.fileName, diagnostics: r.result.diagnostics };
+      return {
+        file: r.fileName,
+        diagnostics: r.result.diagnostics,
+        inputName: r.result.inputName,
+        inputType: r.result.inputType,
+      };
     });
     console.log(JSON.stringify(out));
     if (errors > 0) process.exit(1);

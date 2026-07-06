@@ -5,6 +5,7 @@ import DefaultTheme from 'vitepress/theme';
 import FnIndex from './FnIndex.vue';
 import FnSignature from './FnSignature.vue';
 import HomeStats from './HomeStats.vue';
+import JqPlayground from './JqPlayground.vue';
 import JsonataPlayground from './JsonataPlayground.vue';
 import MiniPlayground from './MiniPlayground.vue';
 import Playground from './Playground.vue';
@@ -16,6 +17,7 @@ export default {
     app.component('Playground', Playground);
     app.component('MiniPlayground', MiniPlayground);
     app.component('JsonataPlayground', JsonataPlayground);
+    app.component('JqPlayground', JqPlayground);
     app.component('Benchmark', Benchmark);
     app.component('FnIndex', FnIndex);
     app.component('FnSignature', FnSignature);

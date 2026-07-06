@@ -50,6 +50,11 @@ features:
     details: The converter rewrites paths, predicates, lambdas and the $-stdlib to typed Typeflow — and tells you exactly what it couldn't convert.
     link: /migration/jsonata
     linkText: Migrate a mapping
+  - icon: 🧰
+    title: Coming from jq?
+    details: Convert declarative jq filters — paths, select, map, sort_by and common functions — into typed Typeflow mappings.
+    link: /migration/jq
+    linkText: Migrate a jq filter
 ---
 
 <div class="home-section">

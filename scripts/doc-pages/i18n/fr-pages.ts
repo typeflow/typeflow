@@ -11,6 +11,7 @@ export const FR_LABELS = {
   customFunctionsTitle: 'Fonctions personnalisées',
   diagnosticsTitle: 'Diagnostics',
   migrationTitle: 'Depuis JSONata',
+  migrationJqTitle: 'Depuis jq',
   severity: { error: 'erreur', warning: 'avertissement' } as Record<
     string,
     string
@@ -214,4 +215,67 @@ Chaque ligne ci-dessus et cet exemple complet sont **convertis et vérifiés par
 ## Playground
 
 <JsonataPlayground />`;
+}
+
+/** Body of /fr/migration/jq. Mirrors the English jq page in generate-docs.ts. */
+export function frJqMigrationBody(worked: {
+  jq: string;
+  typeflow: string;
+}): string {
+  return `Utilisez cette page quand un filtre jq est surtout un mapping de données : remodelage d'objets, lectures de chemins, filtres de tableaux, projections, tris et appels de fonctions simples. Le convertisseur vise le sous-ensemble déclaratif et refuse les constructions non prises en charge au lieu de deviner.
+
+## Ce qui se convertit
+
+| jq | Typeflow | Notes |
+| --- | --- | --- |
+| \`{ a: .x }\`, \`[.x, .y]\` | \`{ a: data.x }\`, \`[data.x, data.y]\` | constructeurs d'objets & de tableaux |
+| \`.a.b.c\` | \`data.a.b.c\` | les chemins relatifs à la racine reçoivent le préfixe de l'input |
+| \`.items[]\` | \`data.items\` | l'itération de tableau est représentée comme la valeur tableau |
+| \`.items[] \\| select(.price > 10)\` | \`data.items[price > 10]\` | \`select\` jq -> filtre Typeflow |
+| \`.items[] \\| select(...) \\| .name\` | \`data.items[...].name\` | filtre puis extraction de champ |
+| \`.items \\| map({ id: .id })\` | \`data.items -> { id: id }\` | \`map\` jq -> projection |
+| \`.orders \\| sort_by(.total)\` | \`data.orders ^(total)\` | \`sort_by\` jq -> tri |
+| \`.totals \\| add\` | \`sum(data.totals)\` | \`add\` devient une somme numérique |
+| \`length\`, \`tostring\`, \`tonumber\` | \`count(x)\`, \`string(x)\`, \`number(x)\` | fonctions filtres jq -> appels Typeflow |
+| \`floor\`, \`ceil\`, \`round\`, \`sqrt\` | mêmes noms | fonctions numériques |
+| \`keys\`, \`reverse\`, \`unique\` | \`keys\`, \`reverse\`, \`distinct\` | helpers objets/tableaux |
+| \`join\`, \`split\`, \`contains\` | mêmes noms | helpers chaînes/tableaux |
+| \`== != < <= > >=\` | mêmes opérateurs | comparaisons |
+| \`and\`, \`or\`, \`not\` | \`&&\`, \`\\|\\|\`, \`!\` | logique booléenne |
+| \`+ - * / %\` | mêmes opérateurs | arithmétique |
+
+## Ce qui ne se convertit pas
+
+Les formes jq non prises en charge reviennent dans \`errors\`, pour que la génération de doc et les migrations échouent clairement plutôt que de publier un mauvais mapping.
+
+| jq | Pourquoi | À la place |
+| --- | --- | --- |
+| \`reduce\`, \`foreach\`, descente récursive \`..\` | contrôle de flux itératif / récursif | une fonction [\`fn\`](/fr/functions/custom) ou [\`use\`](/fr/functions/custom#use) |
+| \`as $x\`, variables, destructuring | modèle de portée pas encore équivalent | réécrire avec un \`let\` Typeflow ou une projection |
+| affectations \`|=\`, \`+=\`, \`del\` | jq orienté mutation | exprimer directement l'objet de sortie attendu |
+| chemins optionnels \`.a?\` et \`try/catch\` | sémantique d'erreurs différente | modéliser l'optionalité avec \`?.\` et \`??\` |
+| clés dynamiques et interpolation | forme de sortie dynamique | garder des clés littérales ou utiliser une fonction personnalisée |
+| modules/imports | fonctionnalité du runtime jq externe | utiliser les [fonctions personnalisées](/fr/functions/custom) Typeflow |
+
+## Exemple complet
+
+Un mapping jq compact qui remodèle des champs client, filtre et projette des produits, trie des commandes, et utilise \`add\` pour un total.
+
+**jq**
+
+\`\`\`
+${worked.jq}
+\`\`\`
+
+**Typeflow** (exactement ce que le convertisseur émet)
+
+\`\`\`typeflow
+${worked.typeflow}
+\`\`\`
+
+Chaque ligne ci-dessus et cet exemple complet sont **convertis et vérifiés par le vrai convertisseur jq au moment du build de cette doc**.
+
+## Playground
+
+<JqPlayground />`;
 }

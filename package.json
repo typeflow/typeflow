@@ -48,6 +48,20 @@
       "import": "./dist/converter/index.js",
       "require": "./dist/converter/index.cjs",
       "default": "./dist/converter/index.js"
+    },
+    "./converter/jsonata": {
+      "types": "./dist/types/converter/jsonata/index.d.ts",
+      "bun": "./src/converter/jsonata/index.ts",
+      "import": "./dist/converter/jsonata/index.js",
+      "require": "./dist/converter/jsonata/index.cjs",
+      "default": "./dist/converter/jsonata/index.js"
+    },
+    "./converter/jq": {
+      "types": "./dist/types/converter/jq/index.d.ts",
+      "bun": "./src/converter/jq/index.ts",
+      "import": "./dist/converter/jq/index.js",
+      "require": "./dist/converter/jq/index.cjs",
+      "default": "./dist/converter/jq/index.js"
     }
   },
   "publishConfig": {

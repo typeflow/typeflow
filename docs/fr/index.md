@@ -50,6 +50,11 @@ features:
     details: Le convertisseur réécrit chemins, prédicats, lambdas et la stdlib $ en Typeflow typé — et dit exactement ce qu'il n'a pas pu convertir.
     link: /fr/migration/jsonata
     linkText: Migrer un mapping
+  - icon: 🧰
+    title: Vous venez de jq ?
+    details: Convertissez des filtres jq déclaratifs — chemins, select, map, sort_by et fonctions courantes — en mappings Typeflow typés.
+    link: /fr/migration/jq
+    linkText: Migrer un filtre jq
 ---
 
 <div class="home-section">
