@@ -13,7 +13,6 @@ export default defineConfig({
   ignorePatterns: [
     '**/node_modules/**',
     'dist/**',
-    'src/rust/**',
     'examples/**',
     'docs/.vitepress/cache/**',
     'docs/.vitepress/dist/**',
