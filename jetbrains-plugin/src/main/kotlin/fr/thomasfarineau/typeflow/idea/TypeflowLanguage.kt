@@ -1,4 +1,4 @@
-package com.thomasfarineau.typeflow.idea
+package fr.thomasfarineau.typeflow.idea
 
 import com.intellij.lang.Language
 

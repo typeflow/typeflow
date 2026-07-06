@@ -1,4 +1,4 @@
-package com.thomasfarineau.typeflow.idea
+package fr.thomasfarineau.typeflow.idea
 
 import com.intellij.lexer.LexerBase
 import com.intellij.psi.TokenType
@@ -52,6 +52,20 @@ class TypeflowLexer : LexerBase() {
 
     private fun isWhitespace(c: Char) = c == ' ' || c == '\t' || c == '\r' || c == '\n'
 
+    /** Index of the next non-whitespace char at/after [from], or -1 at end of buffer. */
+    private fun nextSignificantIndex(from: Int): Int {
+        var j = from
+        while (j < buffer.length && isWhitespace(buffer[j])) j++
+        return if (j < buffer.length) j else -1
+    }
+
+    /** Index of the previous non-whitespace char before [before], or -1 at start of buffer. */
+    private fun prevSignificantIndex(before: Int): Int {
+        var j = before - 1
+        while (j >= 0 && isWhitespace(buffer[j])) j--
+        return j
+    }
+
     private fun advanceInternal() {
         val i = tokenStart
         if (i >= endOffset) {
@@ -81,9 +95,32 @@ class TypeflowLexer : LexerBase() {
             var j = i
             while (j < endOffset && isIdentPart(buffer[j])) j++
             val text = buffer.subSequence(i, j).toString()
+
+            // Property position: `{ name: ...` / `, name?: ...` (mirrors highlight.ts's classify()).
+            val nextIdx = nextSignificantIndex(j)
+            val nextChar = if (nextIdx >= 0) buffer[nextIdx] else null
+            val isPropertyNext =
+                when (nextChar) {
+                    ':' -> true
+                    '?' -> {
+                        val afterQuestion = nextSignificantIndex(nextIdx + 1)
+                        afterQuestion >= 0 && buffer[afterQuestion] == ':'
+                    }
+                    else -> false
+                }
+            val prevIdx = prevSignificantIndex(i)
+            val prevChar = if (prevIdx >= 0) buffer[prevIdx] else null
+            val isPropertyPrev = prevChar == null || prevChar == '{' || prevChar == ','
+
             tokenType =
-                if (TypeflowTokenTypes.KEYWORDS.contains(text)) TypeflowTokenTypes.KEYWORD
-                else TypeflowTokenTypes.IDENTIFIER
+                when {
+                    isPropertyPrev && isPropertyNext -> TypeflowTokenTypes.PROPERTY
+                    nextChar == '(' -> TypeflowTokenTypes.FUNCTION
+                    TypeflowTokenTypes.KEYWORDS.contains(text) -> TypeflowTokenTypes.KEYWORD
+                    TypeflowTokenTypes.LITERALS.contains(text) -> TypeflowTokenTypes.LITERAL
+                    TypeflowTokenTypes.TYPES.contains(text) -> TypeflowTokenTypes.TYPE
+                    else -> TypeflowTokenTypes.IDENTIFIER
+                }
             tokenEnd = j
             return
         }

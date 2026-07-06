@@ -1,4 +1,4 @@
-package com.thomasfarineau.typeflow.idea
+package fr.thomasfarineau.typeflow.idea
 
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.fileTypes.SyntaxHighlighter
@@ -19,8 +19,9 @@ class TypeflowColorSettingsPage : ColorSettingsPage {
 
         map {
           id: user.id,
-          fullName: user.firstName + " " + user.lastName,
+          fullName: trim(user.firstName + " " + user.lastName),
           isAdmin: user.role == "admin",
+          flagged: false,
           email: user.contact?.email ?? "unknown",
           activeTags: user.labels[active].name,
         }
@@ -31,6 +32,10 @@ class TypeflowColorSettingsPage : ColorSettingsPage {
     override fun getAttributeDescriptors(): Array<AttributesDescriptor> =
         arrayOf(
             AttributesDescriptor("Keyword", TypeflowSyntaxHighlighter.KEYWORD),
+            AttributesDescriptor("Property", TypeflowSyntaxHighlighter.PROPERTY),
+            AttributesDescriptor("Function call", TypeflowSyntaxHighlighter.FUNCTION),
+            AttributesDescriptor("Primitive type", TypeflowSyntaxHighlighter.TYPE),
+            AttributesDescriptor("Literal (true/false/null)", TypeflowSyntaxHighlighter.LITERAL),
             AttributesDescriptor("Identifier", TypeflowSyntaxHighlighter.IDENTIFIER),
             AttributesDescriptor("Number", TypeflowSyntaxHighlighter.NUMBER),
             AttributesDescriptor("String", TypeflowSyntaxHighlighter.STRING),

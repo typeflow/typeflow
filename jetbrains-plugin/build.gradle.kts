@@ -4,8 +4,8 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.11.0"
 }
 
-group = "com.thomasfarineau.typeflow"
-version = "0.1.0"
+group = "fr.thomasfarineau.typeflow"
+version = "0.0.1"
 
 repositories {
     mavenCentral()
@@ -29,6 +29,14 @@ intellijPlatform {
         ideaVersion {
             sinceBuild = "253"
         }
+    }
+    signing {
+        certificateChain = providers.environmentVariable("CERTIFICATE_CHAIN")
+        privateKey = providers.environmentVariable("PRIVATE_KEY")
+        password = providers.environmentVariable("PRIVATE_KEY_PASSWORD")
+    }
+    publishing {
+        token = providers.environmentVariable("PUBLISH_TOKEN")
     }
 }
 

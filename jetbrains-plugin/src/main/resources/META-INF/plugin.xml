@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>com.thomasfarineau.typeflow.idea</id>
+    <id>fr.thomasfarineau.typeflow.idea</id>
     <name>Typeflow</name>
     <vendor url="https://github.com/thomasfarineau/typeflow">Thomas Farineau</vendor>
     <description><![CDATA[
@@ -11,20 +11,24 @@
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <fileType
             name="Typeflow"
-            implementationClass="com.thomasfarineau.typeflow.idea.TypeflowFileType"
+            implementationClass="fr.thomasfarineau.typeflow.idea.TypeflowFileType"
             fieldName="INSTANCE"
             language="Typeflow"
             extensions="typeflow"/>
         <lang.syntaxHighlighterFactory
             language="Typeflow"
-            implementationClass="com.thomasfarineau.typeflow.idea.TypeflowSyntaxHighlighterFactory"/>
-        <colorSettingsPage implementation="com.thomasfarineau.typeflow.idea.TypeflowColorSettingsPage"/>
+            implementationClass="fr.thomasfarineau.typeflow.idea.TypeflowSyntaxHighlighterFactory"/>
+        <colorSettingsPage implementation="fr.thomasfarineau.typeflow.idea.TypeflowColorSettingsPage"/>
         <externalAnnotator
             language="Typeflow"
-            implementationClass="com.thomasfarineau.typeflow.idea.TypeflowExternalAnnotator"/>
+            implementationClass="fr.thomasfarineau.typeflow.idea.TypeflowExternalAnnotator"/>
+        <completion.contributor
+            language="Typeflow"
+            implementationClass="fr.thomasfarineau.typeflow.idea.TypeflowCompletionContributor"/>
     </extensions>
 </idea-plugin>
