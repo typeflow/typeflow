@@ -42,13 +42,6 @@
       "require": "./dist/runtime/index.cjs",
       "default": "./dist/runtime/index.js"
     },
-    "./plugin": {
-      "types": "./dist/types/plugin/index.d.ts",
-      "bun": "./src/plugin/index.ts",
-      "import": "./dist/plugin/index.js",
-      "require": "./dist/plugin/index.cjs",
-      "default": "./dist/plugin/index.js"
-    },
     "./converter": {
       "types": "./dist/types/converter/index.d.ts",
       "bun": "./src/converter/index.ts",

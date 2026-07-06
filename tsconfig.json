@@ -16,8 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "@thomasfarineau/typeflow": ["./src/index.ts"],
-      "@thomasfarineau/typeflow/runtime": ["./src/runtime/index.ts"],
-      "@thomasfarineau/typeflow/plugin": ["./src/plugin/index.ts"]
+      "@thomasfarineau/typeflow/runtime": ["./src/runtime/index.ts"]
     }
   },
   "include": [

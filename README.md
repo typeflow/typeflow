@@ -87,24 +87,6 @@ Enable typed imports in `tsconfig.json`:
 { "compilerOptions": { "allowArbitraryExtensions": true } }
 ```
 
-### Importing `.typeflow` files in Bun
-
-```toml
-# bunfig.toml
-preload = ["./typeflow-preload.ts"]
-```
-
-```ts
-// typeflow-preload.ts
-import { plugin } from 'bun';
-import { typeflowPlugin } from '@thomasfarineau/typeflow-bun-plugin';
-plugin(typeflowPlugin());
-```
-
-```ts
-import mapUser from './user.typeflow'; // (input: Input) => Output — fully typed
-```
-
 ### Programmatic API
 
 ```ts
@@ -148,14 +130,13 @@ Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"
 
 | Package                                       | Responsibility                                                |
 | --------------------------------------------- | ------------------------------------------------------------- |
-| `@thomasfarineau/typeflow`                    | Umbrella: compiler + runtime + adapters + plugin, one install |
+| `@thomasfarineau/typeflow`                    | Umbrella: compiler + runtime + adapters, one install          |
 | `@thomasfarineau/typeflow-core`               | Type model, AST/IR, diagnostics. Zero dependencies            |
 | `@thomasfarineau/typeflow-parser`             | Lexer + recursive-descent parser                              |
 | `@thomasfarineau/typeflow-compiler`           | Binding, semantic analysis, type inference, `.d.ts` emission  |
 | `@thomasfarineau/typeflow-runtime`            | Deterministic IR interpreter. Zero dependencies, browser-safe |
 | `@thomasfarineau/typeflow-adapter-typescript` | `input x: T from "./mod"` via the TS compiler API             |
 | `@thomasfarineau/typeflow-cli`                | `check` / `infer` / `types` / `run` / `watch` / `init`        |
-| `@thomasfarineau/typeflow-bun-plugin`         | Import `.typeflow` files directly in Bun                      |
 
 ## Development
 
@@ -169,7 +150,7 @@ $ bun run docs:dev    # docs + playground (VitePress)
 
 ## Roadmap
 
-- **v0.1 (this)** — core language, TS adapter, inference, `.d.typeflow.ts` emission, CLI, Bun plugin.
+- **v0.1 (this)** — core language, TS adapter, inference, `.d.typeflow.ts` emission, CLI.
 - **v0.5** — language server + VS Code extension, Zod/JSON Schema adapters, fragments, `match` on discriminated unions, fixtures, formatter, contract mode (declared output).
 - **v1.0** — frozen grammar + conformance suite, OpenAPI adapter, execution limits, Vite plugin, docs site with playground.
 

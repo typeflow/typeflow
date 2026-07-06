@@ -90,22 +90,6 @@ generated user.d.typeflow.ts
 
 TypeScript comprend désormais `import mapUser from "./user.typeflow"` — avec les types d'entrée/sortie complets.
 
-### Plugin Bun (optionnel)
-
-Les utilisateurs de Bun peuvent aussi faire fonctionner cet import à l'exécution et au bundling, pour charger les fichiers `.typeflow` comme des fonctions précompilées :
-
-```toml
-# bunfig.toml
-preload = ["./typeflow-preload.ts"]
-```
-
-```ts
-// typeflow-preload.ts
-import { plugin } from 'bun';
-import { typeflowPlugin } from '@thomasfarineau/typeflow/plugin';
-plugin(typeflowPlugin());
-```
-
 ## CI
 
 ```console

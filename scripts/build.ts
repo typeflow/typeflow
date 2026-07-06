@@ -15,12 +15,10 @@ rmSync(`${root}dist`, { recursive: true, force: true });
 const libEntries = [
   `${root}src/index.ts`,
   `${root}src/runtime/index.ts`,
-  `${root}src/plugin/index.ts`,
   `${root}src/converter/index.ts`,
 ];
-// The TS adapter loads the consumer's own TypeScript; never bundle it. The
-// plugin reaches the runtime through the package's own export map.
-const external = ['typescript', '@thomasfarineau/typeflow/runtime'];
+// The TS adapter loads the consumer's own TypeScript; never bundle it.
+const external = ['typescript'];
 
 const esm = await Bun.build({
   entrypoints: [...libEntries, `${root}src/cli/main.ts`],
