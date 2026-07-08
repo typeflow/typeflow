@@ -1,9 +1,10 @@
 /**
  * Benchmark scenarios: the SAME transformation written four ways — a
- * Typeflow mapping, a JSONata expression, a jq filter converted to Typeflow,
- * and a hand-written JS function (the native ceiling). The docs' benchmark
- * page runs them in the visitor's browser; scripts/generate-docs.ts verifies
- * at build time that all four produce identical output, so the page can't
+ * Typeflow mapping, a JSONata expression, a REAL jq filter (executed by the
+ * actual jq codebase compiled to WebAssembly, via jq-wasm), and a
+ * hand-written JS function (the native ceiling). The docs' benchmark page
+ * runs them in the visitor's browser; scripts/generate-docs.ts verifies at
+ * build time that all four produce identical output, so the page can't
  * compare apples to oranges.
  */
 
@@ -15,9 +16,13 @@ export interface BenchScenario {
   typeflow: string;
   /** Equivalent JSONata expression (parsed once, evaluated per iteration). */
   jsonata: string;
-  /** Equivalent jq filter (converted to Typeflow once, run per iteration). */
+  /**
+   * Equivalent jq filter, in real jq (run by jq-wasm; must produce exactly
+   * one output value). NOT converter syntax: `.a[] | select(...)` inside an
+   * object literal would fan out into one object per element in actual jq.
+   */
   jq: string;
-  /** Name of the Typeflow input binding used when compiling the jq conversion. */
+  /** Name of the Typeflow input binding (kept for converter-based tooling). */
   inputName: string;
   /** Equivalent hand-written function — displayed via String(js). */
   js: (input: never) => unknown;
@@ -84,8 +89,8 @@ map {
   fullName: (.firstName + " " + .lastName),
   isAdmin: (.role == "admin"),
   email: (.contact.email // "unknown"),
-  activeTags: .labels[] | select(.active == true) | .name,
-  total: .scores | add
+  activeTags: [.labels[] | select(.active) | .name],
+  total: (.scores | add)
 }`,
     inputName: 'user',
     js: (user: User) => ({
@@ -139,13 +144,13 @@ map {
   "stockValue": $sum(products[inStock].price),
   "featured": [products[price >= $$.threshold].{ "label": $uppercase(name), "price": price }]
 }`,
-    jq: `{
-  inStock: .products[] | select(.inStock == true) | length,
-  stockValue: .products[] | select(.inStock == true) | .price | add,
-  featured: .products[] | select(.price >= 50) | {
+    jq: `.threshold as $t | {
+  inStock: ([.products[] | select(.inStock)] | length),
+  stockValue: ([.products[] | select(.inStock) | .price] | add),
+  featured: [.products[] | select(.price >= $t) | {
     label: (.name | ascii_upcase),
     price: .price
-  }
+  }]
 }`,
     inputName: 'data',
     js: (data: Catalog) => {

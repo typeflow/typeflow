@@ -1,5 +1,5 @@
-import { type Env, evalExpr } from './interpreter';
 import { type CompiledMapping } from '../core';
+import { compileMapping } from './compile';
 import { TypeflowRuntimeError } from './errors';
 
 export { TypeflowRuntimeError } from './errors';
@@ -47,20 +47,9 @@ export function createMapping(
       );
     }
   }
-  const defs = Object.fromEntries(
-    (compiled.defs ?? []).map((d) => [d.name, d]),
-  );
-  return (input: unknown) => {
-    // Globals (external functions + `fn` definitions) live above the input
-    // binding, so `fn` bodies see their parameters and globals — nothing else.
-    const globalEnv: Env = { functions: external, defs, depth: { value: 0 } };
-    const root: Env = {
-      bindings: { [compiled.inputName]: input },
-      rootInput: input,
-      parent: globalEnv,
-    };
-    return evalExpr(compiled.ir, root);
-  };
+  // The IR is compiled once into closures (see ./compile.ts); the returned
+  // function only executes direct calls. Compile once, execute many.
+  return compileMapping(compiled, external);
 }
 
 export function runMapping(

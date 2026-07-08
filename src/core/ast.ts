@@ -30,10 +30,30 @@ export interface LiteralExpr {
   span: Span;
 }
 
+/**
+ * Static resolution of an identifier, annotated by the checker on the checked
+ * AST (optional → artifact v1 stays backward-compatible; absent means the
+ * runtime falls back to the dynamic scope walk).
+ *
+ * `hops` counts scope levels up from the identifier's own scope, and is valid
+ * because the checker's scope chain mirrors the runtime's env chain 1:1
+ * (root, filter/index/sort element scopes, `->` scopes, `let` blocks, `fn`
+ * bodies). `var` reads a binding at that level; `field` reads a field of the
+ * element at that level. `dyn` marks a resolution the checker could not pin
+ * down (optional field, `any`/`union` element on the path, conflicting
+ * resolutions across union-part re-checks, index scopes).
+ */
+export type IdentRes =
+  | { kind: 'var'; hops: number }
+  | { kind: 'field'; hops: number }
+  | { kind: 'dyn' };
+
 export interface IdentExpr {
   kind: 'ident';
   name: string;
   span: Span;
+  /** Static resolution (see IdentRes); absent → dynamic lookup. */
+  res?: IdentRes;
 }
 
 export interface MemberExpr {

@@ -11,6 +11,8 @@ import {
   type Diagnostic,
   type Expr,
   type FilterExpr,
+  type IdentExpr,
+  type IdentRes,
   type IndexExpr,
   makeUnion,
   nonNullishParts,
@@ -32,6 +34,18 @@ interface Scope {
   element?: Type;
   /** Input type, set on the root scope; reachable from anywhere as `$root`. */
   rootType?: Type;
+  /**
+   * Index scopes: the runtime env exists (hop counts stay aligned) but its
+   * element is `undefined`, so bare identifiers never resolve to element
+   * fields there at runtime.
+   */
+  noRuntimeElement?: boolean;
+  /**
+   * Bracket scopes only: identifiers whose static resolution landed on this
+   * scope's element. If the bracket turns out to be an `index`, they are
+   * re-marked dynamic (see `noRuntimeElement`).
+   */
+  bracketIdents?: IdentExpr[];
   parent?: Scope;
 }
 
@@ -90,26 +104,63 @@ export class Checker {
     return this.resolveRootType(scope);
   }
 
-  private resolveIdent(name: string, scope: Scope): Type | undefined {
-    if (name === '$root') return this.resolveRootType(scope);
-    if (name === '$parent') return this.nthParentType(scope, 1);
-    for (let s: Scope | undefined = scope; s; s = s.parent) {
+  /**
+   * Resolve an identifier and, when the resolution is runtime-stable, say
+   * where it lands (`res`) so the runtime can read it directly instead of
+   * walking the env chain.
+   *
+   * A static resolution is only claimed when every element scope CROSSED on
+   * the way is a concrete object type without the name (any other element
+   * kind could still own the property at runtime and shadow the outer
+   * resolution), and the landing field is non-optional. `$root` / `$parent` /
+   * `$` stay special-cased in the runtime and get no annotation.
+   */
+  private resolveIdentRes(
+    name: string,
+    scope: Scope,
+  ): { type: Type | undefined; res?: IdentRes; landing?: Scope } {
+    if (name === '$root') return { type: this.resolveRootType(scope) };
+    if (name === '$parent') return { type: this.nthParentType(scope, 1) };
+    let hops = 0;
+    let unsafeCross = false;
+    for (let s: Scope | undefined = scope; s; s = s.parent, hops++) {
       if (s.element) {
-        if (name === '$') return s.element;
-        if (s.element.kind === 'any' || s.element.kind === 'unknown')
-          return T.any;
-        if (s.element.kind === 'object') {
-          const field = s.element.fields.find((f) => f.name === name);
-          if (field)
-            return field.optional
-              ? makeUnion([field.type, T.undefined])
-              : field.type;
+        if (name === '$') return { type: s.element };
+        if (!s.noRuntimeElement) {
+          if (s.element.kind === 'any' || s.element.kind === 'unknown') {
+            return { type: T.any, res: { kind: 'dyn' } };
+          }
+          if (s.element.kind === 'object') {
+            const field = s.element.fields.find((f) => f.name === name);
+            if (field) {
+              const type = field.optional
+                ? makeUnion([field.type, T.undefined])
+                : field.type;
+              // Optional fields may be absent at runtime, where the dynamic
+              // lookup falls through to outer scopes — keep them dynamic.
+              const res: IdentRes =
+                field.optional || unsafeCross
+                  ? { kind: 'dyn' }
+                  : { kind: 'field', hops };
+              return { type, res, landing: s };
+            }
+          } else {
+            // Union/array/primitive element: the runtime hasOwn check could
+            // still match — crossing it statically would change scoping.
+            unsafeCross = true;
+          }
         }
       }
       const v = s.vars.get(name);
-      if (v) return v;
+      if (v) {
+        return {
+          type: v,
+          res: unsafeCross ? { kind: 'dyn' } : { kind: 'var', hops },
+          landing: s,
+        };
+      }
     }
-    return undefined;
+    return { type: undefined };
   }
 
   private visibleNames(scope: Scope): string[] {
@@ -129,7 +180,7 @@ export class Checker {
         return T.literal(expr.value);
 
       case 'ident': {
-        const t = this.resolveIdent(expr.name, scope);
+        const { type: t, res, landing } = this.resolveIdentRes(expr.name, scope);
         if (t === undefined) {
           const suggestion = suggestName(expr.name, this.visibleNames(scope));
           this.error(
@@ -138,6 +189,23 @@ export class Checker {
             expr.span,
           );
           return T.any;
+        }
+        // Annotate the node; bodies re-checked against several union parts
+        // may resolve differently per part — a conflict degrades to dynamic.
+        if (res) {
+          if (expr.res === undefined) {
+            expr.res = res;
+          } else if (
+            expr.res.kind !== res.kind ||
+            (expr.res.kind !== 'dyn' &&
+              res.kind !== 'dyn' &&
+              expr.res.hops !== res.hops)
+          ) {
+            expr.res = { kind: 'dyn' };
+          }
+          if (expr.res.kind === 'field' && landing?.bracketIdents) {
+            landing.bracketIdents.push(expr);
+          }
         }
         return t;
       }
@@ -169,12 +237,20 @@ export class Checker {
         );
         const element = arrayInfo ?? T.any;
         const inner = expr.inner;
-        const innerScope: Scope = { vars: new Map(), element, parent: scope };
+        const innerScope: Scope = {
+          vars: new Map(),
+          element,
+          bracketIdents: [],
+          parent: scope,
+        };
         const innerType = this.checkExpr(inner, innerScope);
 
         const mutable = expr as unknown as Record<string, unknown>;
         if (isNumberish(innerType) && innerType.kind !== 'any') {
           // Numeric index: rewrite to `index`; the element may be absent.
+          // The runtime evaluates the index with element = undefined, so any
+          // identifier statically resolved to THIS element must go dynamic.
+          for (const id of innerScope.bracketIdents!) id.res = { kind: 'dyn' };
           mutable.kind = 'index';
           mutable.index = inner;
           delete mutable.inner;
@@ -203,6 +279,7 @@ export class Checker {
         this.checkExpr((expr as IndexExpr).index, {
           vars: new Map(),
           element,
+          noRuntimeElement: true,
           parent: scope,
         });
         return makeUnion([element, T.undefined]);

@@ -47,6 +47,7 @@ import { format } from '../src/formatter';
 import { FR_DIAGNOSTICS } from './doc-pages/i18n/fr-diagnostics';
 import { FR_OPERATOR_PAGES } from './doc-pages/i18n/fr-operators';
 import { join } from 'node:path';
+import { json as jqJson } from 'jq-wasm';
 import jsonata from 'jsonata';
 import { JQ_MIGRATION_EXAMPLES } from '../src/converter/jq/examples';
 import { MIGRATION_EXAMPLES } from '../src/converter/jsonata/examples';
@@ -560,9 +561,12 @@ function verifyJqMigrationExamples(): { jq: string; typeflow: string } {
   if (!worked) {
     throw new Error("Missing jq 'Putting it together' migration example.");
   }
-  const workedSource = `input data: ${worked.inputType}\n\n${convertJq(worked.jq, {
-    input: 'none',
-  }).typeflow.trim()}`;
+  const workedSource = `input data: ${worked.inputType}\n\n${convertJq(
+    worked.jq,
+    {
+      input: 'none',
+    },
+  ).typeflow.trim()}`;
   return {
     jq: worked.jq,
     typeflow: format(workedSource).formatted.trim(),
@@ -762,15 +766,9 @@ ${sections.join('\n\n')}
 `;
 }
 
-function inputDeclaration(source: string): string {
-  const marker = '\n\nmap';
-  const end = source.indexOf(marker);
-  if (end === -1) throw new Error('Benchmark scenario is missing a map block.');
-  return source.slice(0, end).trim();
-}
-
 // ---- benchmark scenarios: the /benchmark page claims "same output, four
-// ---- implementations" — prove it here, or fail the docs build.
+// ---- implementations" — prove it here, or fail the docs build. The jq
+// ---- filter runs on REAL jq (jq-wasm), the same engine the page uses.
 
 async function verifyBenchScenarios(): Promise<void> {
   for (const s of BENCH_SCENARIOS) {
@@ -786,24 +784,9 @@ async function verifyBenchScenarios(): Promise<void> {
       const tf = JSON.stringify(createMapping(res.compiled!)(input));
       const js = JSON.stringify((s.js as (i: unknown) => unknown)(input));
       const jn = JSON.stringify(await jsonata(s.jsonata).evaluate(input));
-      const jqConverted = convertJq(s.jq, {
-        input: 'none',
-        inputName: s.inputName,
-      });
-      if (!jqConverted.ok) {
-        throw new Error(
-          `Benchmark scenario '${s.id}' jq filter does not convert: ${jqConverted.errors.join('; ')}`,
-        );
-      }
-      const jqSource = `${inputDeclaration(s.typeflow)}\n\n${jqConverted.typeflow}`;
-      const jqRes = compile(jqSource);
-      const jqErrors = jqRes.diagnostics.filter((d) => d.severity === 'error');
-      if (jqErrors.length > 0) {
-        throw new Error(
-          `Benchmark scenario '${s.id}' converted jq does not compile: ${jqErrors[0]!.message}`,
-        );
-      }
-      const jq = JSON.stringify(createMapping(jqRes.compiled!)(input));
+      const jq = JSON.stringify(
+        ((await jqJson(input as object, s.jq)) as unknown[])[0],
+      );
       if (tf !== js || js !== jn || js !== jq) {
         throw new Error(
           `Benchmark scenario '${s.id}' (n=${n}) is not equivalent across implementations:\n  typeflow: ${tf.slice(0, 120)}\n  js:       ${js.slice(0, 120)}\n  jsonata:  ${jn.slice(0, 120)}\n  jq:       ${jq.slice(0, 120)}`,

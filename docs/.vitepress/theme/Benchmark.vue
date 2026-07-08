@@ -4,8 +4,10 @@ import {
   type BenchScenario,
 } from '../../../scripts/bench/scenarios';
 import { computed, reactive, ref } from 'vue';
+// The inline build embeds the WASM binary in the module: no asset fetch, so
+// it survives Vite dep pre-bundling (the URL-based browser entry 404s there).
+import { json as jqJson, loadJq } from 'jq-wasm/inline';
 import { compile } from '@thomasfarineau/typeflow-compiler';
-import { convertJq } from '@thomasfarineau/typeflow-converter';
 import { createMapping } from '@thomasfarineau/typeflow-runtime';
 import { highlightTypeflow } from './highlight';
 import jsonata from 'jsonata';
@@ -30,6 +32,8 @@ const ui = computed(() =>
         },
         mismatch:
           'Les quatre implémentations ne produisent pas la même sortie — benchmark annulé.',
+        failed:
+          'Un moteur n’a pas pu se charger ou s’exécuter — voir la console du navigateur.',
         verified: 'sorties identiques vérifiées avant mesure ✔',
       }
     : {
@@ -47,6 +51,8 @@ const ui = computed(() =>
         },
         mismatch:
           'The four implementations disagree on the output — benchmark aborted.',
+        failed:
+          'An engine failed to load or run — see the browser console.',
         verified: 'identical outputs verified before measuring ✔',
       },
 );
@@ -63,6 +69,7 @@ interface ScenarioState {
   size: number;
   tab: 'tf' | 'jq' | 'jn' | 'js';
   status: 'idle' | 'running' | 'done' | 'error';
+  errorKind: 'mismatch' | 'failed' | null;
   current: EngineId | null;
   results: EngineResult[];
 }
@@ -75,6 +82,7 @@ const states = reactive<Record<string, ScenarioState>>(
         size: s.defaultSize,
         tab: 'tf' as const,
         status: 'idle' as const,
+        errorKind: null,
         current: null,
         results: [],
       },
@@ -86,21 +94,11 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function codeHtml(
-  s: BenchScenario,
-  tab: 'tf' | 'jq' | 'jn' | 'js',
-): string {
+function codeHtml(s: BenchScenario, tab: 'tf' | 'jq' | 'jn' | 'js'): string {
   if (tab === 'tf') return highlightTypeflow(s.typeflow);
   if (tab === 'jq') return escapeHtml(s.jq);
   if (tab === 'jn') return escapeHtml(s.jsonata);
   return escapeHtml(String(s.js));
-}
-
-function inputDeclaration(source: string): string {
-  const marker = '\n\nmap';
-  const end = source.indexOf(marker);
-  if (end === -1) throw new Error('Benchmark scenario is missing a map block.');
-  return source.slice(0, end).trim();
 }
 
 const yieldToUi = () => new Promise((r) => setTimeout(r));
@@ -165,33 +163,27 @@ async function run(s: BenchScenario): Promise<void> {
       return createMapping(r.compiled!);
     });
     const prepareJn = timePrepare(() => jsonata(s.jsonata));
-    const prepareJq = timePrepare(() => {
-      const converted = convertJq(s.jq, {
-        input: 'none',
-        inputName: s.inputName,
-      });
-      const source = `${inputDeclaration(s.typeflow)}\n\n${converted.typeflow}`;
-      return createMapping(compile(source).compiled!);
-    });
+    // Real jq (the C codebase compiled to WASM): the one-time cost is the
+    // module instantiation; per-call time includes the JSON round-trip to
+    // the WASM side, inherent to running actual jq in-process.
+    const tJq0 = performance.now();
+    await loadJq();
+    const prepareJq = performance.now() - tJq0;
     const tfRun = createMapping(compile(s.typeflow).compiled!);
     const jnExpr = jsonata(s.jsonata);
-    const jqConverted = convertJq(s.jq, {
-      input: 'none',
-      inputName: s.inputName,
-    });
-    const jqRun = createMapping(
-      compile(`${inputDeclaration(s.typeflow)}\n\n${jqConverted.typeflow}`)
-        .compiled!,
-    );
+    // jq emits a stream; the scenario filters produce exactly one value.
+    const jqRun = (i: unknown) =>
+      jqJson(i as object, s.jq).then((r) => (r as unknown[])[0]);
     const jsFn = s.js as (i: unknown) => unknown;
 
     // The page's whole premise: same output. Re-check on THIS input size.
     const a = JSON.stringify(tfRun(input));
     const b = JSON.stringify(jsFn(input));
     const c = JSON.stringify(await jnExpr.evaluate(input));
-    const d = JSON.stringify(jqRun(input));
+    const d = JSON.stringify(await jqRun(input));
     if (a !== b || b !== c || b !== d) {
       st.status = 'error';
+      st.errorKind = 'mismatch';
       return;
     }
 
@@ -201,7 +193,7 @@ async function run(s: BenchScenario): Promise<void> {
     st.current = 'tf';
     const tf = await measureSync(() => tfRun(input));
     st.current = 'jq';
-    const jq = await measureSync(() => jqRun(input));
+    const jq = await measureAsync(() => jqRun(input));
     st.current = 'jn';
     const jn = await measureAsync(() => jnExpr.evaluate(input));
 
@@ -212,8 +204,12 @@ async function run(s: BenchScenario): Promise<void> {
       { engine: 'jn', opsSec: jn, prepareMs: prepareJn },
     ];
     st.status = 'done';
-  } catch {
+  } catch (err) {
+    // Not a mismatch: an engine failed to prepare or run (the mismatch path
+    // returns above). Surface it instead of blaming the outputs.
+    console.error('[benchmark]', err);
     st.status = 'error';
+    st.errorKind = 'failed';
   } finally {
     st.current = null;
   }
@@ -283,7 +279,7 @@ function relOf(st: ScenarioState, r: EngineResult): number {
       </div>
 
       <p v-if="states[s.id]!.status === 'error'" class="bench-error">
-        {{ ui.mismatch }}
+        {{ states[s.id]!.errorKind === 'failed' ? ui.failed : ui.mismatch }}
       </p>
 
       <div v-if="states[s.id]!.status !== 'idle'" class="bench-results">
