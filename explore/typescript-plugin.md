@@ -1,116 +1,116 @@
-# Plugin TypeScript pour `.typeflow` — analyse
+# TypeScript plugin for `.typeflow` — analysis
 
-_Rapport du 2026-07-05. Périmètre B implémenté le même jour — voir
-« Implémentation » tout en bas._
+_Report from 2026-07-05. Scope B implemented the same day — see
+"Implementation" at the very bottom._
 
-## Objectif
+## Goal
 
-`import userTypeflow from "./user.typeflow"` avec inférence complète dans
-l'IDE (hover, autocomplete sur la sortie, erreurs sur les mauvais champs) —
-« naturellement », sans étape manuelle à retenir.
+`import userTypeflow from "./user.typeflow"` with full inference in the
+IDE (hover, autocomplete on the output, errors on bad fields) —
+"naturally", with no manual step to remember.
 
-## Ce qui existe déjà (et qui marche)
+## What already exists (and already works)
 
-Le mécanisme n'est pas à inventer, il est déjà dans le repo :
+The mechanism doesn't need to be invented, it's already in the repo:
 
-- `tsconfig.json` a `allowArbitraryExtensions: true`.
-- `emitDts()` (`src/compiler/emit.ts`) génère un `.d.typeflow.ts` sidecar à
-  côté du `.typeflow` :
+- `tsconfig.json` has `allowArbitraryExtensions: true`.
+- `emitDts()` (`src/compiler/emit.ts`) generates a `.d.typeflow.ts` sidecar
+  next to the `.typeflow` file:
   ```ts
   type TypeflowInput = { id: number; firstName: string; ... };
   type TypeflowOutput = { id: number; fullName: string; ... };
   declare const mapping: (input: TypeflowInput) => TypeflowOutput;
   export default mapping;
   ```
-  Grâce à `allowArbitraryExtensions`, TypeScript résout
-  `import mapUser from "./user.typeflow"` contre ce `user.d.typeflow.ts` —
-  c'est une fonctionnalité TS 5.0+ standard, pas un hack.
-- `typeflow types` (`src/cli/commands/analyze.ts:cmdTypes`) génère ces
-  sidecars en une passe ; `typeflow types --check` détecte le drift (utile en
-  CI, déjà branché dans le script `typecheck` de `package.json`).
-- `typeflow watch` (`cmdWatch`) surveille le filesystem (`fs.watch`,
-  debounce 150 ms) et régénère les `.d.typeflow.ts` à chaque sauvegarde d'un
-  `.typeflow`. Lancé à côté de l'éditeur, c'est déjà une expérience quasi
-  « live » : VS Code/tsserver détectent le fichier `.d.typeflow.ts` modifié
-  sur disque et rafraîchissent l'inférence sans action supplémentaire.
+  Thanks to `allowArbitraryExtensions`, TypeScript resolves
+  `import mapUser from "./user.typeflow"` against this `user.d.typeflow.ts` —
+  this is a standard TS 5.0+ feature, not a hack.
+- `typeflow types` (`src/cli/commands/analyze.ts:cmdTypes`) generates these
+  sidecars in one pass; `typeflow types --check` detects drift (useful in
+  CI, already wired into the `typecheck` script in `package.json`).
+- `typeflow watch` (`cmdWatch`) watches the filesystem (`fs.watch`,
+  150 ms debounce) and regenerates the `.d.typeflow.ts` files on every save
+  of a `.typeflow` file. Run alongside the editor, this already gives a
+  near-"live" experience: VS Code/tsserver detect the `.d.typeflow.ts` file
+  changed on disk and refresh inference with no further action.
 
-Donc `import x from "./user.typeflow"` **fonctionne et s'infère
-correctement aujourd'hui**, à condition d'avoir lancé `typeflow watch` (ou
-relancé `typeflow types` après chaque modification).
+So `import x from "./user.typeflow"` **works and infers correctly today**,
+as long as `typeflow watch` has been launched (or `typeflow types` re-run
+after each edit).
 
-## Ce qu'il manque pour que ce soit « naturel »
+## What's missing for it to be "natural"
 
-Trois frictions, indépendantes les unes des autres :
+Three frictions, independent of each other:
 
-1. **Il faut se souvenir de lancer `typeflow watch`.** Rien ne le fait tout
-   seul à l'ouverture du projet — ce n'est ni automatique ni découvrable pour
-   quelqu'un qui ne lit pas le README.
-2. **Latence fichier.** Sauvegarde → `fs.watch` (debounce 150 ms) → recompile
-   → écriture disque → tsserver renote le fichier. En pratique quasi
-   instantané, mais ce n'est pas la frappe-par-frappe que donne un vrai
-   plugin de langage (édition dans un buffer non sauvegardé, par exemple).
-3. **Rien à l'intérieur du `.typeflow` lui-même.** Cette chaîne ne concerne
-   que le fichier `.ts` qui _importe_ le mapping. Ouvrir `user.typeflow` dans
-   l'éditeur ne donne ni coloration syntaxique, ni erreurs inline (TF2xxx),
-   ni autocomplete sur les champs de l'input ou les 51 builtins — seul
-   `typeflow check`/`watch` en terminal les affiche.
+1. **You have to remember to launch `typeflow watch`.** Nothing does it
+   automatically when the project opens — it's neither automatic nor
+   discoverable for someone who doesn't read the README.
+2. **File latency.** Save → `fs.watch` (150 ms debounce) → recompile →
+   disk write → tsserver picks up the file. In practice near-instant, but
+   it's not the keystroke-by-keystroke experience a real language plugin
+   gives (editing in an unsaved buffer, for instance).
+3. **Nothing inside the `.typeflow` file itself.** This whole chain only
+   concerns the `.ts` file that _imports_ the mapping. Opening
+   `user.typeflow` in the editor gives no syntax highlighting, no inline
+   errors (TF2xxx), no autocomplete on the input fields or the 51
+   builtins — only `typeflow check`/`watch` in the terminal shows those.
 
-Ce sont trois problèmes différents, avec trois solutions différentes. Un
-« plugin TypeScript » ne répond qu'au premier et au deuxième.
+These are three different problems with three different solutions. A
+"TypeScript plugin" only addresses the first and the second.
 
-## Ce qu'apporterait un vrai plugin TypeScript (Language Service Plugin)
+## What a real TypeScript plugin (Language Service Plugin) would bring
 
-TypeScript expose une API de plugin (`ts.server.PluginModule`, chargée par
-`tsserver` — le process que VS Code, WebStorm, Neovim/coc-tsserver pilotent
-tous). C'est le mécanisme derrière `@vue/typescript-plugin` (`.vue`),
-`svelte-language-server`, l'extension Astro : faire comprendre à `tsserver`
-un fichier qui n'est pas du TypeScript, pour que l'IDE (hover, autocomplete,
-diagnostics, go-to-definition) fonctionne comme s'il en était.
+TypeScript exposes a plugin API (`ts.server.PluginModule`, loaded by
+`tsserver` — the process that VS Code, WebStorm, and Neovim/coc-tsserver
+all drive). It's the mechanism behind `@vue/typescript-plugin` (`.vue`),
+`svelte-language-server`, and the Astro extension: making `tsserver`
+understand a file that isn't TypeScript, so the IDE (hover, autocomplete,
+diagnostics, go-to-definition) works as if it were.
 
-Deux briques possibles, combinables :
+Two possible building blocks, which can be combined:
 
-### A. Proxy du Language Service
+### A. Language Service proxy
 
-Le plugin reçoit le `LanguageService` réel et retourne un objet qui
-intercepte certaines méthodes (`getSemanticDiagnostics`,
-`getQuickInfoAtPosition`, `getCompletionsAtPosition`…) pour les positions qui
-tombent sur un import `.typeflow` ou sur son spécificateur.
+The plugin receives the real `LanguageService` and returns an object that
+intercepts certain methods (`getSemanticDiagnostics`,
+`getQuickInfoAtPosition`, `getCompletionsAtPosition`…) for positions that
+fall on a `.typeflow` import or its specifier.
 
-### B. Fichiers virtuels via `resolveModuleNameLiterals` + `getScriptSnapshot`
+### B. Virtual files via `resolveModuleNameLiterals` + `getScriptSnapshot`
 
-Le plugin intercepte la résolution de module : quand `tsserver` rencontre
-`import x from "./user.typeflow"`, au lieu de chercher `user.d.typeflow.ts`
-sur disque, le plugin **synthétise en mémoire** un fichier virtuel — le même
-contenu que `emitDts()` produit déjà, calculé à la volée en appelant
-`compile()` sur le contenu ACTUEL du buffer (pas forcément sauvegardé). Ça
-élimine la friction n°2 : plus besoin d'écrire sur disque, tsserver a déjà
-tout le mécanisme d'invalidation par version de fichier (`getScriptVersion`)
-pour ne rafraîchir que ce qui a changé.
+The plugin intercepts module resolution: when `tsserver` encounters
+`import x from "./user.typeflow"`, instead of looking for
+`user.d.typeflow.ts` on disk, the plugin **synthesizes an in-memory
+file** — the same content `emitDts()` already produces, computed on the
+fly by calling `compile()` on the CURRENT content of the buffer (not
+necessarily saved). This eliminates friction #2: no more need to write to
+disk, tsserver already has the whole file-version invalidation mechanism
+(`getScriptVersion`) to refresh only what changed.
 
-C'est un réemploi direct de l'existant : `compile()` et `emitDts()` sont déjà
-la bonne API, il n'y a rien à dupliquer côté logique de types — le plugin
-n'est qu'un adaptateur entre l'API `ts.LanguageServiceHost` et ce qui existe
-déjà dans `src/compiler`.
+This is a direct reuse of what already exists: `compile()` and
+`emitDts()` are already the right API, there's nothing to duplicate on
+the type-logic side — the plugin is just an adapter between the
+`ts.LanguageServiceHost` API and what already exists in `src/compiler`.
 
-### Contrainte importante : `tsc` en CLI ignore les plugins de langage
+### Important constraint: `tsc` on the CLI ignores language plugins
 
-`tsc --noEmit` (utilisé par `bun run typecheck` et par CI) **ne charge pas**
-les plugins de `tsserver` — seuls les éditeurs le font. C'est exactement
-pourquoi l'écosystème Vue a dû créer `vue-tsc` (un wrapper CLI séparé) en
-plus de `@vue/typescript-plugin` : le plugin ne suffit pas pour la ligne de
-commande.
+`tsc --noEmit` (used by `bun run typecheck` and by CI) **does not load**
+`tsserver` plugins — only editors do. This is exactly why the Vue
+ecosystem had to create `vue-tsc` (a separate CLI wrapper) on top of
+`@vue/typescript-plugin`: the plugin alone isn't enough for the command
+line.
 
-Bonne nouvelle : typeflow n'a pas ce problème à résoudre, il est déjà réglé —
-`typeflow types --check` fait exactement le travail de vérification en CLI
-que `vue-tsc` fait pour Vue, et existe déjà. Un plugin TS n'y changerait
-rien ; les deux mécanismes coexisteraient (plugin pour l'IDE, `types --check`
-pour la CI), sans duplication de logique puisque les deux appellent
+Good news: typeflow doesn't have this problem to solve, it's already
+handled — `typeflow types --check` does exactly the CLI verification work
+that `vue-tsc` does for Vue, and already exists. A TS plugin wouldn't
+change anything here; the two mechanisms would coexist (plugin for the
+IDE, `types --check` for CI), with no logic duplication since both call
 `compile()`/`emitDts()`.
 
-### Contrainte d'adoption
+### Adoption constraint
 
-Un Language Service Plugin **n'est pas zero-config** : le projet consommateur
-doit ajouter dans son `tsconfig.json` :
+A Language Service Plugin **is not zero-config**: the consuming project
+must add to its `tsconfig.json`:
 
 ```jsonc
 {
@@ -120,55 +120,55 @@ doit ajouter dans son `tsconfig.json` :
 }
 ```
 
-Pas pire que Vue/Svelte/Astro (tous demandent ça), mais ça reste une étape
-manuelle en plus de `npm i` — à mettre en balance avec le gain réel (éliminer
-`typeflow watch` en tâche de fond).
+No worse than Vue/Svelte/Astro (all of which require this), but it's
+still one extra manual step on top of `npm i` — to weigh against the
+actual gain (eliminating the background `typeflow watch` task).
 
-## Trois périmètres possibles
+## Three possible scopes
 
-### A. Automatiser l'existant (petit, pas de plugin TS)
+### A. Automate what exists (small, no TS plugin)
 
-`typeflow watch` déjà présent, mais jamais lancé automatiquement. Options
-sans écrire de plugin TS :
+`typeflow watch` already exists but is never launched automatically.
+Options without writing a TS plugin:
 
-- Documenter/fournir un `.vscode/tasks.json` avec `"runOn": "folderOpen"`
-  lançant `typeflow watch` à l'ouverture du dossier dans VS Code.
-- Un hook `postinstall` qui rappelle de le lancer (ou le lance en arrière-plan
-  via un supervisor léger) — plus intrusif, à éviter par défaut.
+- Document/ship a `.vscode/tasks.json` with `"runOn": "folderOpen"`
+  launching `typeflow watch` when the folder opens in VS Code.
+- A `postinstall` hook that reminds the user to launch it (or launches it
+  in the background via a lightweight supervisor) — more intrusive,
+  avoid by default.
 
-Ferme la friction n°1 pour VS Code spécifiquement, zéro nouveau code dans
-`src/`, un fichier de config. Ne résout pas la latence fichier ni
-l'expérience d'édition du `.typeflow` lui-même.
+Closes friction #1 for VS Code specifically, zero new code in `src/`, one
+config file. Doesn't solve file latency nor the editing experience of the
+`.typeflow` file itself.
 
-### B. Vrai Language Service Plugin (moyen)
+### B. Real Language Service Plugin (medium)
 
-Sous-chemin du package existant `@thomasfarineau/typeflow/ts-plugin` (pas un
-nouveau package séparé — cohérent avec un seul `npm i`) :
+Subpath of the existing package `@thomasfarineau/typeflow/ts-plugin` (not
+a new separate package — consistent with a single `npm i`):
 
-- Implémente `resolveModuleNameLiterals` + fichiers virtuels (option B
-  ci-dessus) pour les imports `.typeflow`, en réutilisant `compile()` +
-  `emitDts()` tels quels.
-- Élimine la latence fichier et le besoin de lancer `typeflow watch` pour que
-  l'IMPORT soit inféré — mais seulement dans l'éditeur (voir contrainte CI
-  ci-dessus, déjà couverte par l'existant).
-- N'apporte rien à l'édition du `.typeflow` lui-même (périmètre C).
+- Implements `resolveModuleNameLiterals` + virtual files (option B above)
+  for `.typeflow` imports, reusing `compile()` + `emitDts()` as-is.
+- Eliminates file latency and the need to launch `typeflow watch` for the
+  IMPORT to be inferred — but only in the editor (see CI constraint
+  above, already covered by what exists).
+- Brings nothing to editing the `.typeflow` file itself (scope C).
 
-#### Validation : le mécanisme central marche, testé directement contre l'API TS
+#### Validation: the core mechanism works, tested directly against the TS API
 
-Le risque technique principal de B — est-ce que rediriger un import vers un
-fichier virtuel calculé à la volée donne vraiment du hover/autocomplete
-live ? — se teste sans écrire de vrai plugin `tsserver` : un
-`ts.LanguageServiceHost` custom suffit, appelé directement via
-`ts.createLanguageService`. Testé avec le vrai `compile()`/`emitDts()` de
-`src/compiler`, aucune logique de types réimplémentée.
+The main technical risk of B — does redirecting an import to a virtual
+file computed on the fly really give live hover/autocomplete? — can be
+tested without writing a real `tsserver` plugin: a custom
+`ts.LanguageServiceHost` is enough, called directly via
+`ts.createLanguageService`. Tested with the real `compile()`/`emitDts()`
+from `src/compiler`, no type logic reimplemented.
 
 ```ts
 const host: ts.LanguageServiceHost = {
   // ...
   getScriptSnapshot: (fileName) => {
     if (fileName === DTS_FILE) {
-      // Le cœur du mécanisme : (re)calculé à la volée depuis la source EN
-      // MÉMOIRE du mapping, jamais écrit sur disque.
+      // The core of the mechanism: (re)computed on the fly from the
+      // mapping's IN-MEMORY source, never written to disk.
       return ts.ScriptSnapshot.fromString(currentDts());
     }
     // ...
@@ -177,211 +177,208 @@ const host: ts.LanguageServiceHost = {
     literals.map((lit) =>
       lit.text.endsWith('.typeflow')
         ? { resolvedModule: { resolvedFileName: DTS_FILE, extension: ts.Extension.Dts, isExternalLibraryImport: false } }
-        : /* résolution normale */,
+        : /* normal resolution */,
     ),
 };
 ```
 
-Résultat, sur `import mapUser from "./user.typeflow"` + `const out = mapUser(...); out.` :
+Result, on `import mapUser from "./user.typeflow"` + `const out = mapUser(...); out.`:
 
 ```
-=== hover sur mapUser ===
+=== hover on mapUser ===
 (alias) mapUser(input: TypeflowInput): TypeflowOutput
 
-=== completions sur `out.` (mapping initial) ===
+=== completions on `out.` (initial mapping) ===
 [ "fullName", "id", "isAdmin" ]
 
-=== completions sur `out.` (après édition EN MÉMOIRE, +champ email) ===
+=== completions on `out.` (after IN-MEMORY edit, +email field) ===
 [ "email", "fullName", "id", "isAdmin" ]
 ```
 
-La dernière ligne est le point qui compte : le mapping a été modifié en
-mémoire (pas de sauvegarde disque, pas de réécriture de fichier), seul un
-compteur de version a été incrémenté — `getCompletionsAtPosition` reflète le
-nouveau champ immédiatement. C'est exactement la promesse du périmètre B
-(latence zéro, pas de `typeflow watch`), démontrée sans écrire le plugin
-`tsserver` complet.
+The last line is the point that matters: the mapping was modified in
+memory (no disk save, no file rewrite), only a version counter was
+incremented — `getCompletionsAtPosition` reflects the new field
+immediately. This is exactly the promise of scope B (zero latency, no
+`typeflow watch`), demonstrated without writing the full `tsserver`
+plugin.
 
-Ce que ça ne teste pas encore : le fonctionnement **dans un vrai `tsserver`**
-piloté par un éditeur (le `ts.server.PluginModule` est une couche
-supplémentaire — un objet `{ create(info): ts.LanguageService }` que
-`tsserver` instancie par projet, où `info.languageServiceHost` est déjà
-fourni par `tsserver` lui-même : il faut alors _patcher_ les méthodes
-existantes de cet host plutôt que d'en fournir un de zéro comme ci-dessus).
-C'est un changement d'échafaudage, pas un changement de mécanisme — la partie
-prouvée ici (redirection + snapshot recalculé + invalidation par version) est
-réutilisée telle quelle à l'intérieur du `create()`.
+What this doesn't yet test: behavior **inside a real `tsserver`** driven
+by an editor (the `ts.server.PluginModule` is an extra layer — an object
+`{ create(info): ts.LanguageService }` that `tsserver` instantiates per
+project, where `info.languageServiceHost` is already provided by
+`tsserver` itself: existing methods on that host must then be _patched_
+rather than providing a fresh one from scratch as above). This is a
+scaffolding change, not a mechanism change — the part proven here
+(redirection + recomputed snapshot + version-based invalidation) is
+reused as-is inside `create()`.
 
-- Effort révisé : le risque « est-ce que la redirection de module donne
-  vraiment du live » est levé. Ce qui reste : l'échafaudage
-  `ts.server.PluginModule` (créer/patcher le host fourni par `tsserver`,
-  gérer plusieurs projets), remonter les diagnostics TF2xxx du mapping lui
-  -même sur la ligne d'import (mapping des spans typeflow → plages TS), et le
-  packaging/publish. ~1 semaine reste une estimation raisonnable ; référence :
-  code source des plugins Vue/Svelte/Astro pour l'échafaudage
-  `PluginModule`.
+- Revised effort: the risk of "does module redirection really give live
+  updates" is resolved. What remains: the `ts.server.PluginModule`
+  scaffolding (creating/patching the host provided by `tsserver`,
+  handling multiple projects), surfacing TF2xxx diagnostics from the
+  mapping itself on the import line (mapping typeflow spans → TS ranges),
+  and packaging/publishing. ~1 week remains a reasonable estimate;
+  reference: source code of the Vue/Svelte/Astro plugins for the
+  `PluginModule` scaffolding.
 
-### C. Expérience d'édition du `.typeflow` (plus grand, hors scope de la demande initiale)
+### C. `.typeflow` editing experience (bigger, out of scope of the original request)
 
-Coloration syntaxique, erreurs inline (TF2xxx), hover et autocomplete sur les
-champs de l'input et les 51 builtins **à l'intérieur** du fichier
-`.typeflow` — un besoin réel mais différent, qui ne se résout pas avec un
-Language Service Plugin TS (le `.typeflow` n'est pas du TypeScript, tsserver
-ne l'ouvre jamais). Deux options si un jour ça devient prioritaire :
+Syntax highlighting, inline errors (TF2xxx), hover and autocomplete on
+input fields and the 51 builtins **inside** the `.typeflow` file — a real
+but different need, which a TS Language Service Plugin can't solve (the
+`.typeflow` file isn't TypeScript, tsserver never opens it). Two options
+if this ever becomes a priority:
 
-- Une extension VS Code dédiée (grammaire TextMate + une diagnostic
-  collection alimentée par `compile()`) — le plus rapide, mais VS Code
-  uniquement.
-- Un vrai serveur LSP (`vscode-languageserver`) — portable (VS Code,
-  Neovim, JetBrains via LSP4IJ), plus de travail, réutilise toujours
-  `compile()`/`checker` côté sémantique.
+- A dedicated VS Code extension (TextMate grammar + a diagnostic
+  collection fed by `compile()`) — fastest, but VS Code only.
+- A real LSP server (`vscode-languageserver`) — portable (VS Code,
+  Neovim, JetBrains via LSP4IJ), more work, still reuses
+  `compile()`/`checker` on the semantic side.
 
-Périmètre indépendant de A et B ; à ne traiter que si le besoin se
-manifeste (aujourd'hui `typeflow check`/`watch` en terminal couvre le
-signal, juste pas inline).
+Scope independent of A and B; only tackle if the need arises (today
+`typeflow check`/`watch` in the terminal covers the signal, just not
+inline).
 
-## Recommandation
+## Recommendation
 
-1. **Court terme** : périmètre A — un `.vscode/tasks.json` documenté (ou
-   embarqué dans `typeflow init`) qui lance `typeflow watch` automatiquement.
-   Zéro nouveau package, ferme la friction la plus bête (« j'ai oublié de
-   lancer watch ») pour la majorité des utilisateurs VS Code.
-2. **Si le besoin de latence zéro se confirme** : périmètre B — le mécanisme
-   central (redirection de module + snapshot recalculé + invalidation par
-   version) est validé, pas juste théorique (voir plus haut). Ce qui reste
-   est de l'échafaudage `ts.server.PluginModule` connu (précédents
-   Vue/Svelte/Astro), pas de la recherche. Reste un adaptateur autour de
-   `compile()`/`emitDts()`, aucune logique de types dupliquée. Garder
-   `typeflow types --check` pour la CI (déjà fait, ne change pas).
-3. **Périmètre C** (édition du `.typeflow` lui-même) : backlog séparé, pas un
-   prérequis pour que l'import soit « naturellement inféré » — c'est déjà
-   vrai aujourd'hui pour le fichier qui importe, via le mécanisme existant.
+1. **Short term**: scope A — a documented `.vscode/tasks.json` (or
+   bundled into `typeflow init`) that automatically launches
+   `typeflow watch`. Zero new package, closes the dumbest friction ("I
+   forgot to launch watch") for most VS Code users.
+2. **If the need for zero latency is confirmed**: scope B — the core
+   mechanism (module redirection + recomputed snapshot + version-based
+   invalidation) is validated, not just theoretical (see above). What
+   remains is known `ts.server.PluginModule` scaffolding (Vue/Svelte/Astro
+   precedents), not research. Just an adapter around
+   `compile()`/`emitDts()`, no duplicated type logic. Keep
+   `typeflow types --check` for CI (already done, unchanged).
+3. **Scope C** (editing the `.typeflow` file itself): separate backlog,
+   not a prerequisite for the import to be "naturally inferred" — that's
+   already true today for the importing file, via the existing
+   mechanism.
 
-## Implémentation (périmètre B)
+## Implementation (scope B)
 
-Fait, dans `src/ts-plugin/index.ts`, exporté en tant que sous-chemin du
-package (`@thomasfarineau/typeflow/ts-plugin`) — pas un nouveau package npm
-séparé, cohérent avec le principe « un seul `npm i` ».
+Done, in `src/ts-plugin/index.ts`, exported as a subpath of the package
+(`@thomasfarineau/typeflow/ts-plugin`) — not a new separate npm package,
+consistent with the "single `npm i`" principle.
 
-### Ce que fait le code
+### What the code does
 
-`init({ typescript }) → { create(info), getExternalFiles(project) }` — la
-forme standard d'un `ts.server.PluginModule` :
+`init({ typescript }) → { create(info), getExternalFiles(project) }` —
+the standard shape of a `ts.server.PluginModule`:
 
-- `create(info)` patche en place les méthodes de `info.languageServiceHost`
-  que `tsserver` a déjà construit :
-  - `resolveModuleNameLiterals` : tout spécificateur qui finit par
-    `.typeflow` est redirigé vers un fichier virtuel `<chemin>.typeflow.d.ts`
-    (chemin résolu à la main, normalisé en `/` — voir bug ci-dessous) ;
-    tout le reste passe à la résolution d'origine.
-  - `getScriptSnapshot` / `getScriptVersion` / `fileExists` / `readFile` :
-    pour un chemin `*.typeflow.d.ts`, appellent `computeDts()`, qui lit le
-    `.typeflow` réel via `ts.sys.readFile`, appelle `compile()` +
-    `emitDts()` (les mêmes fonctions que `typeflow types`), et met en cache
-    par mtime — pas de recompilation si le fichier n'a pas changé.
-  - `getExternalFiles(project)` : liste les `.typeflow` réels correspondant
-    aux fichiers virtuels déjà résolus, pour que l'éditeur les surveille et
-    revalide les importeurs — un plus, pas un prérequis (la vérification par
-    version au moment de la requête suffit déjà).
-- `input user: T from "./mod"` fonctionne : `computeDts` passe
-  `createTypeScriptResolver()` (le même adaptateur que la CLI) à `compile()`,
-  pas seulement les types inline.
+- `create(info)` patches in place the methods of
+  `info.languageServiceHost` already built by `tsserver`:
+  - `resolveModuleNameLiterals`: any specifier ending in `.typeflow` is
+    redirected to a virtual file `<path>.typeflow.d.ts` (path resolved by
+    hand, normalized to `/` — see bug below); everything else passes
+    through to the original resolution.
+  - `getScriptSnapshot` / `getScriptVersion` / `fileExists` / `readFile`:
+    for a `*.typeflow.d.ts` path, call `computeDts()`, which reads the
+    real `.typeflow` file via `ts.sys.readFile`, calls `compile()` +
+    `emitDts()` (the same functions `typeflow types` uses), and caches by
+    mtime — no recompilation if the file hasn't changed.
+  - `getExternalFiles(project)`: lists the real `.typeflow` files
+    matching the already-resolved virtual files, so the editor watches
+    them and revalidates importers — a bonus, not a prerequisite (the
+    version check at request time is already enough).
+- `input user: T from "./mod"` works: `computeDts` passes
+  `createTypeScriptResolver()` (the same adapter as the CLI) to
+  `compile()`, not just inline types.
 
-### Bug trouvé et corrigé pendant la validation
+### Bug found and fixed during validation
 
-Premier essai : chemin virtuel construit par concaténation d'un suffixe
-`.typeflow.d.ts` sur un chemin qui finissait déjà par `.typeflow` →
-`user.typeflow.typeflow.d.ts`, résolution silencieusement ratée (aucune
-erreur, juste `unknown` partout). Deuxième bug, Windows spécifique :
-`path.resolve`/`path.dirname` renvoient des chemins à antislash, alors que
-les clés de fichiers internes de TS sont canoniques en `/` même sous
-Windows — sans normalisation, le fichier virtuel existait sous une clé que
-`getScriptSnapshot` ne reconnaissait jamais. Les deux corrigés, testés avant
-et après (voir ci-dessous).
+First attempt: the virtual path was built by concatenating a
+`.typeflow.d.ts` suffix onto a path that already ended in `.typeflow` →
+`user.typeflow.typeflow.d.ts`, resolution silently failed (no error, just
+`unknown` everywhere). Second bug, Windows-specific: `path.resolve`/
+`path.dirname` return backslash paths, while TS's internal file keys are
+canonically `/`-based even on Windows — without normalization, the
+virtual file existed under a key `getScriptSnapshot` never recognized.
+Both fixed, tested before and after (see below).
 
 ### Validation
 
-Deux niveaux, tous les deux contre du code réel, pas contre une
-réimplémentation :
+Two levels, both against real code, not against a reimplementation:
 
-1. **Mécanisme** (avant d'écrire `src/ts-plugin/`) : un
-   `ts.LanguageServiceHost` construit à la main avec la redirection
-   directement dedans, testé via `ts.createLanguageService`. Sert à valider
-   l'idée avant d'investir dans l'échafaudage `PluginModule`.
-2. **Artefact réel** (après) : `dist/ts-plugin/index.cjs` (le build `bun run
-build` normal du projet) chargé via `require()` — exactement comme
-   `tsserver` le ferait — puis `create(info)` appelé sur un `LanguageService`
-   **déjà construit** avant le patch (ça reproduit l'ordre réel : `tsserver`
-   construit son `Project`/`LanguageService` puis instancie les plugins
-   ensuite). Résultat, sur le mapping `user.typeflow` d'exemple :
+1. **Mechanism** (before writing `src/ts-plugin/`): a hand-built
+   `ts.LanguageServiceHost` with the redirection directly inside it,
+   tested via `ts.createLanguageService`. Used to validate the idea
+   before investing in the `PluginModule` scaffolding.
+2. **Real artifact** (after): `dist/ts-plugin/index.cjs` (the project's
+   normal `bun run build` output) loaded via `require()` — exactly as
+   `tsserver` would — then `create(info)` called on a `LanguageService`
+   **already built** before the patch (this reproduces the real order:
+   `tsserver` builds its `Project`/`LanguageService` then instantiates
+   plugins afterward). Result, on the example `user.typeflow` mapping:
 
    ```
-   hover sur mapUser → (alias) mapUser(input: TypeflowInput): TypeflowOutput
+   hover on mapUser → (alias) mapUser(input: TypeflowInput): TypeflowOutput
    diagnostics → []
-   completions sur `out.` → [ "fullName", "id" ]
+   completions on `out.` → [ "fullName", "id" ]
 
-   # user.typeflow modifié SUR DISQUE (+ champ isAdmin), sans rien redémarrer :
-   completions sur `out.` → [ "fullName", "id", "isAdmin" ]
+   # user.typeflow modified ON DISK (+ isAdmin field), without restarting anything:
+   completions on `out.` → [ "fullName", "id", "isAdmin" ]
    ```
 
-`bun run build && bun test && bunx tsc --noEmit -p tsconfig.json` passent
-tous (148 tests, 0 échec).
+`bun run build && bun test && bunx tsc --noEmit -p tsconfig.json` all
+pass (148 tests, 0 failures).
 
-### Ce qui n'est PAS validé
+### What is NOT validated
 
-Le fonctionnement dans un vrai `tsserver` piloté par VS Code/un éditeur —
-testé ici via un harnais qui reproduit l'API et l'ordre d'appel réels
-(`LanguageService` construit avant le patch), mais pas via une vraie session
-d'éditeur. À faire avant de documenter la fonctionnalité comme stable :
-ajouter `"plugins": [{ "name": "@thomasfarineau/typeflow/ts-plugin" }]` au
-`tsconfig.json` d'un projet consommateur et ouvrir `consumer.ts` dans VS
-Code pour confirmer hover/autocomplete en conditions réelles.
+Behavior inside a real `tsserver` driven by VS Code/an editor — tested
+here via a harness that reproduces the real API and call order
+(`LanguageService` built before the patch), but not via a real editor
+session. To do before documenting the feature as stable: add
+`"plugins": [{ "name": "@thomasfarineau/typeflow/ts-plugin" }]` to a
+consuming project's `tsconfig.json` and open `consumer.ts` in VS Code to
+confirm hover/autocomplete under real conditions.
 
-Confirmé aussi dans ce rapport, pas juste supposé : sans extension
-d'éditeur compagnon, « live » veut dire « à jour au dernier fichier
-sauvegardé sur disque » (le test ci-dessus édite le fichier avec `writeFileSync`,
-pas un buffer non sauvegardé) — le plugin élimine `typeflow watch` et le
-fichier `.d.typeflow.ts`, pas l'étape de sauvegarde elle-même.
+Also confirmed in this report, not just assumed: without a companion
+editor extension, "live" means "up to date with the last file saved to
+disk" (the test above edits the file with `writeFileSync`, not an
+unsaved buffer) — the plugin eliminates `typeflow watch` and the
+`.d.typeflow.ts` file, not the save step itself.
 
-## Exemple réel construit (`examples/ts-plugin/`, retiré depuis)
+## Real example built (`examples/ts-plugin/`, since removed)
 
-Un exemple Node autonome a été ajouté et validé, sans `package.json`/
-`node_modules` (auto-référencement, comme `examples/api-response` et
-`examples/bun-plugin`) :
+A standalone Node example was added and validated, with no
+`package.json`/`node_modules` (self-referencing, like
+`examples/api-response` and `examples/bun-plugin`):
 
-- `hover-demo.ts` — `import mapUser from "./user.typeflow"` local, pensé pour
-  être ouvert dans un éditeur (hover, autocomplete, mise à jour après
-  sauvegarde).
+- `hover-demo.ts` — local `import mapUser from "./user.typeflow"`,
+  designed to be opened in an editor (hover, autocomplete, update after
+  save).
 - `cross-import-demo.ts` — `import mapUser, { type Input } from
-  "../api-response/user.typeflow"` : import **cross-répertoire** d'un mapping
-  d'un autre exemple, qui déclare un type externe (`ApiUser from
-  "./user-types"`, pas inline). Validé que le plugin résout le type externe
-  via `createTypeScriptResolver()` relatif au dossier du `.typeflow`, peu
-  importe qui l'importe :
+  "../api-response/user.typeflow"`: a **cross-directory** import of a
+  mapping from another example, which declares an external type
+  (`ApiUser from "./user-types"`, not inline). Validated that the plugin
+  resolves the external type via `createTypeScriptResolver()` relative
+  to the `.typeflow` file's directory, regardless of who imports it:
   ```
-  hover sur mapUser → (alias) mapUser(input: Input): TypeflowOutput
-  hover sur Input   → type Input = { id: number; firstName: string; ...; address: {...}; scores: number[] }
-  completions sur mapped. → [ activeTags, address, email, fullName, id, isAdmin, tagCount, totalScore ]
+  hover on mapUser → (alias) mapUser(input: Input): TypeflowOutput
+  hover on Input   → type Input = { id: number; firstName: string; ...; address: {...}; scores: number[] }
+  completions on mapped. → [ activeTags, address, email, fullName, id, isAdmin, tagCount, totalScore ]
   ```
-- `run.ts` — exécute le mapping pour de vrai (`compile()` + `createMapping()`
-  explicites), sans dépendre d'aucun des deux mécanismes ci-dessous.
+- `run.ts` — actually runs the mapping (explicit `compile()` +
+  `createMapping()`), without depending on either mechanism below.
 
-## Deuxième mécanisme construit : exécuter `.typeflow` hors Bun (`src/node-loader/`)
+## Second mechanism built: running `.typeflow` outside Bun (`src/node-loader/`)
 
-Question complémentaire posée en cours de route : le plugin TS rend l'import
-*typé*, mais `hover-demo.ts`/`cross-import-demo.ts` ne sont exécutables
-qu'avec le plugin Bun (`@thomasfarineau/typeflow/plugin`, préchargé via
-`bunfig.toml`) — `tsx`/`ts-node`/`node` nu échouent avec
-`ERR_UNKNOWN_FILE_EXTENSION` (aucun loader pour `.typeflow`).
+Follow-up question raised along the way: the TS plugin makes the import
+*typed*, but `hover-demo.ts`/`cross-import-demo.ts` are only runnable
+with the Bun plugin (`@thomasfarineau/typeflow/plugin`, preloaded via
+`bunfig.toml`) — plain `tsx`/`ts-node`/`node` fail with
+`ERR_UNKNOWN_FILE_EXTENSION` (no loader for `.typeflow`).
 
-Réponse : un hook de chargement Node natif (`node:module` `register()` —
-le mécanisme sur lequel `tsx` lui-même est bâti, visible dans sa propre
-stack trace : `node:internal/modules/customization_hooks`). Même génération
-de code que le plugin Bun (compiler une fois, émettre un petit module
-`createMapping(<artefact JSON>)`), exposé en sous-chemin
-`@thomasfarineau/typeflow/node-loader`.
+Answer: a native Node loader hook (`node:module` `register()` — the
+mechanism `tsx` itself is built on, visible in its own stack trace:
+`node:internal/modules/customization_hooks`). Same codegen as the Bun
+plugin (compile once, emit a small `createMapping(<JSON artifact>)`
+module), exposed as a subpath `@thomasfarineau/typeflow/node-loader`.
 
-Validé réellement, pas juste en théorie :
+Actually validated, not just in theory:
 
 ```console
 $ node --import ./register.mjs --experimental-strip-types hover-demo.ts
@@ -391,33 +388,34 @@ $ NODE_OPTIONS="--import ./register.mjs" npx tsx cross-import-demo.ts
 Ada Lovelace { city: 'London', country: 'unknown' }
 ```
 
-Matrice complète qui en résultait :
+Resulting complete matrix:
 
-| Besoin                          | Mécanisme                                  |
-| -------------------------------- | ------------------------------------------- |
-| Inférence IDE (hover/autocomplete)| `@thomasfarineau/typeflow/ts-plugin`         |
-| Exécution sous Bun                | `@thomasfarineau/typeflow/plugin`            |
-| Exécution sous Node/tsx/ts-node   | `@thomasfarineau/typeflow/node-loader`       |
+| Need                               | Mechanism                                    |
+| ----------------------------------- | --------------------------------------------- |
+| IDE inference (hover/autocomplete)  | `@thomasfarineau/typeflow/ts-plugin`          |
+| Running under Bun                   | `@thomasfarineau/typeflow/plugin`             |
+| Running under Node/tsx/ts-node      | `@thomasfarineau/typeflow/node-loader`        |
 
-## État actuel : retiré du code
+## Current state: removed from the code
 
-Les deux mécanismes construits dans cette session (`src/ts-plugin/`,
-`src/node-loader/`), l'exemple (`examples/ts-plugin/`), et les branchements
-associés (`package.json` exports, `scripts/build.ts`, `tsconfig.json` paths,
-section README) ont été **retirés du code** — rien n'est resté en place.
+Both mechanisms built in this session (`src/ts-plugin/`,
+`src/node-loader/`), the example (`examples/ts-plugin/`), and the
+associated wiring (`package.json` exports, `scripts/build.ts`,
+`tsconfig.json` paths, README section) have been **removed from the
+code** — nothing was left in place.
 
-Le plugin Bun préexistant (`src/plugin/index.ts`, `examples/bun-plugin/`,
-sous-chemin `@thomasfarineau/typeflow/plugin`) a été retiré dans la foulée,
-sur demande explicite — ce n'était pas un ajout de cette session mais une
-fonctionnalité déjà livrée. Avec les trois mécanismes partis, il n'y a plus
-aucun moyen d'exécuter un import `.typeflow` directement (`import x from
-"./m.typeflow"`) dans ce repo — seul `compile()` + `createMapping()` (ou
-`loadTypeflowMapping()`) explicites restent, ce qui marche partout sans
-aucun plugin.
+The pre-existing Bun plugin (`src/plugin/index.ts`,
+`examples/bun-plugin/`, subpath `@thomasfarineau/typeflow/plugin`) was
+removed right after, at explicit request — it wasn't an addition from
+this session but an already-shipped feature. With all three mechanisms
+gone, there is no longer any way to run a `.typeflow` import directly
+(`import x from "./m.typeflow"`) in this repo — only explicit
+`compile()` + `createMapping()` (or `loadTypeflowMapping()`) remain,
+which works everywhere with no plugin at all.
 
-Ce rapport (analyse, code de référence, bugs trouvés, résultats de
-validation ci-dessus) reste la base à reprendre telle quelle si ce travail
-redémarre :
-le risque technique est levé des deux côtés (redirection de module pour le
-plugin TS, hook `register()` pour l'exécution), il ne reste que du code à
-réécrire, pas de la recherche.
+This report (analysis, reference code, bugs found, validation results
+above) remains the baseline to pick back up as-is if this work resumes:
+the technical risk is resolved on both sides (module redirection for the
+TS plugin, `register()` hook for execution), all that's left is code to
+rewrite, not research.
+</content>

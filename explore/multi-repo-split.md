@@ -1,91 +1,161 @@
-# Faut-il éclater le repo en `core` / `cli` / `converter` ?
+# Should the repo be split into `core` / `cli` / `converter`?
 
-Date : 2026-07-06
-Contexte : le plugin JetBrains vit maintenant dans `jetbrains-plugin/` à côté du repo TS. La question posée : est-ce que ça vaut le coup de splitter `typeflow` en plusieurs repos npm (core, cli, converter) ?
+Date: 2026-07-06
+Context: the JetBrains plugin now lives in `jetbrains-plugin/` next to the TS repo. The question raised: is it worth splitting `typeflow` into several npm repos (core, cli, converter)?
 
-## Ce qui existe déjà
+## What already exists
 
-Le package est **mono-repo, mono-package, zéro dépendance runtime** :
+The package is **mono-repo, mono-package, zero runtime dependency**:
 
 ```json
 "dependencies": {},
 "devDependencies": { "jsonata": "...", ... }
 ```
 
-`jsonata` n'est même utilisé qu'en devDep par `src/converter/jsonata` — signe que le converter est déjà pensé comme un sous-module optionnel.
+`jsonata` is only used as a devDep, by `src/converter/jsonata` — a sign
+that the converter is already thought of as an optional sub-module.
 
-`package.json` expose déjà des **subpath exports** séparés :
+`package.json` already exposes separate **subpath exports**:
 
 - `.` → `src/index.ts`
 - `./runtime` → `src/runtime/index.ts`
-- `./converter`, `./converter/jsonata`, `./converter/jq` → indépendants
+- `./converter`, `./converter/jsonata`, `./converter/jq` → independent
 - `bin.typeflow` → `dist/cli/main.js`
 
-Donc la séparation *logique* (core / runtime / converter / cli) existe déjà au niveau des exports. La question n'est pas "faut-il découper le code" (déjà fait) mais "faut-il découper le **repo git / package npm**".
+So the *logical* separation (core / runtime / converter / cli) already
+exists at the exports level. The question isn't "should the code be
+split up" (already done) but "should the git repo / npm package be split
+up".
 
-## Taille réelle des modules
+## Actual module sizes
 
-| Module | LOC | Rôle |
+| Module | LOC | Role |
 |---|---|---|
-| `converter` | 2456 | jq/jsonata → typeflow (le plus gros, et le plus séparable) |
-| `compiler` | 1163 | checker + emit dts |
-| `builtins` | 1132 | fonctions intégrées |
+| `converter` | 2456 | jq/jsonata → typeflow (the biggest, and the most separable) |
+| `compiler` | 1163 | checker + dts emit |
+| `builtins` | 1132 | built-in functions |
 | `parser` | 914 | lexer/parser |
-| `cli` | 595 | commandes + reports |
+| `cli` | 595 | commands + reports |
 | `core` | 649 | types, ast, diagnostics |
-| `runtime` | 398 | interpréteur |
+| `runtime` | 398 | interpreter |
 | `formatter` | 351 | pretty-printer |
-| `adapter` | 198 | résolveur TS |
+| `adapter` | 198 | TS resolver |
 
-Total ~7850 LOC. C'est un **petit projet**. Pour comparaison, un split de repos a du sens généralement au-delà de 20-30k LOC par unité, ou quand des équipes différentes possèdent des parties différentes.
+Total ~7850 LOC. This is a **small project**. For comparison, splitting
+repos generally makes sense beyond 20-30k LOC per unit, or when
+different teams own different parts.
 
-## Couplage réel entre modules (via graphify)
+## Actual coupling between modules (via graphify)
 
-En traçant les imports :
+Tracing imports:
 
-- `cli` importe `core`, `compiler`, `adapter`, `runtime`, `formatter` — **le CLI dépend de presque tout**. Un repo `cli` séparé devrait donc dépendre de `core` en semver et se resynchroniser à chaque release, pour un module qui ne représente que 8% du LOC.
-- `converter` importe `formatter` et s'importe lui-même (`jq` ← `jsonata/sample-type`). Il est le module le plus **indépendant** — c'est celui qui aurait le plus de sens à isoler s'il devait y en avoir un.
-- `adapter` importe `core` + `compiler`.
-- `compiler`/`builtins`/`runtime`/`core` sont fortement imbriqués (types partagés `Type`, `Diagnostic`, `Expr`, `CompiledFn` circulent entre les quatre).
+- `cli` imports `core`, `compiler`, `adapter`, `runtime`, `formatter` —
+  **the CLI depends on almost everything**. A separate `cli` repo would
+  therefore have to depend on `core` via semver and resync on every
+  release, for a module that's only 8% of the LOC.
+- `converter` imports `formatter` and imports itself
+  (`jq` ← `jsonata/sample-type`). It's the most **independent** module —
+  the one that would make the most sense to isolate if there had to be
+  one.
+- `adapter` imports `core` + `compiler`.
+- `compiler`/`builtins`/`runtime`/`core` are heavily interlinked (shared
+  types `Type`, `Diagnostic`, `Expr`, `CompiledFn` flow between the four).
 
-Le cœur (`core` + `compiler` + `builtins` + `runtime` + `parser`) forme un seul bloc cohérent qui change ensemble à chaque évolution du langage. Le séparer casserait ça pour un gain nul : toute PR qui ajoute un builtin ou change l'AST toucherait 3 repos.
+The core (`core` + `compiler` + `builtins` + `runtime` + `parser`) forms
+a single cohesive block that changes together with every evolution of
+the language. Splitting it would break that for zero gain: any PR that
+adds a builtin or changes the AST would touch 3 repos.
 
-## Coût d'un split multi-repo
+## Cost of a multi-repo split
 
-Concret, pas théorique — ce que ça ajoute :
+Concrete, not theoretical — what it would add:
 
-- **Versioning** : `cli` et `converter` doivent pin une version de `core`. Chaque changement de type dans `core` = bump + republish + bump dans les deux autres + republish. Pour un projet solo/petite équipe, c'est de la friction pure, pas de la sécurité.
-- **CI/release** : 3 pipelines, 3 changelogs, 3 `npm publish`, coordination des versions compatibles.
-- **Dev loop** : plus de `bun link`/workspace juggling pour tester un changement de `core` dans `cli` en local, alors qu'aujourd'hui c'est un simple import relatif.
-- **Le plugin JetBrains n'a même pas besoin de ça** : il consomme le CLI compilé (`dist/cli/main.js`) comme process externe, pas les sources TS. Le split de repo npm n'a aucun impact sur lui — le vrai sujet d'intégration, c'est le binaire/CLI, pas la modularité npm.
+- **Versioning**: `cli` and `converter` would have to pin a version of
+  `core`. Every type change in `core` = bump + republish + bump in the
+  other two + republish. For a solo/small-team project, that's pure
+  friction, not safety.
+- **CI/release**: 3 pipelines, 3 changelogs, 3 `npm publish`,
+  coordinating compatible versions.
+- **Dev loop**: more `bun link`/workspace juggling to test a `core`
+  change in `cli` locally, whereas today it's a simple relative import.
+- **The JetBrains plugin doesn't even need this**: it consumes the
+  compiled CLI (`dist/cli/main.js`) as an external process, not the TS
+  sources. The npm repo split has zero impact on it — the real
+  integration surface is the binary/CLI, not npm modularity.
 
-## Bénéfices attendus vs réels
+## Expected vs. actual benefits
 
-Les raisons classiques de splitter :
-1. **Équipes séparées / ownership** → n'existe pas ici (un seul mainteneur).
-2. **Cycles de release différents** → possible en théorie (converter change moins souvent que core) mais pas observé dans l'historique de commits, et gérable avec des **subpath exports + tags de version** sans split de repo.
-3. **Réduire le bundle consommé** → déjà réglé par les exports séparés (`./converter`, `./runtime`, etc.), un consommateur qui n'importe pas `converter` ne le tree-shake même pas besoin — il n'importe juste pas ce chemin.
-4. **Publier `core` seul pour d'autres consommateurs** (ex: un jour un plugin qui veut juste le type-checker sans le CLI) → seul argument qui tient, mais résolu par les subpath exports actuels sans repo séparé.
+Classic reasons to split:
+1. **Separate teams / ownership** → doesn't apply here (a single
+   maintainer).
+2. **Different release cycles** → possible in theory (converter changes
+   less often than core) but not observed in the commit history, and
+   manageable with **subpath exports + version tags** without a repo
+   split.
+3. **Reduce the bundle consumers pull in** → already solved by the
+   separate exports (`./converter`, `./runtime`, etc.), a consumer who
+   doesn't import `converter` doesn't even need to tree-shake it — they
+   just don't import that path.
+4. **Publish `core` alone for other consumers** (e.g. someday a plugin
+   that just wants the type-checker without the CLI) → the only argument
+   that holds, but already solved by the current subpath exports without
+   a separate repo.
 
-## Recommandation
+## Recommendation
 
-**Ne pas splitter en plusieurs repos maintenant.** Le ratio effort/bénéfice est mauvais à cette taille (7.8k LOC, zéro dépendance, un seul mainteneur) et le couplage réel entre `cli`/`core`/`compiler` rendrait la synchronisation de versions plus coûteuse que la valeur récupérée.
+**Don't split into multiple repos now.** The effort/benefit ratio is bad
+at this size (7.8k LOC, zero dependencies, a single maintainer), and the
+real coupling between `cli`/`core`/`compiler` would make version
+synchronization more costly than the value recovered.
 
-Si le besoin réapparaît plus tard (ex: quelqu'un veut consommer uniquement `core` en dépendance externe, ou une équipe dédiée reprend `converter`), la voie la moins chère est un **monorepo à workspaces** (bun/npm workspaces, packages séparés `@typeflow/core`, `@typeflow/cli`, `@typeflow/converter` dans un seul repo git) plutôt que 3 repos git. Ça donne le versioning indépendant et la publication séparée sans le coût de synchronisation cross-repo — et ça se fait en gardant la structure `src/` actuelle presque intacte (renommer les dossiers en packages, ajouter des `package.json` locaux).
+If the need reappears later (e.g. someone wants to consume only `core`
+as an external dependency, or a dedicated team takes over `converter`),
+the cheapest path is a **workspace monorepo** (bun/npm workspaces,
+separate packages `@typeflow/core`, `@typeflow/cli`,
+`@typeflow/converter` in a single git repo) rather than 3 git repos.
+That gives independent versioning and separate publishing without the
+cost of cross-repo synchronization — and it can be done while keeping
+the current `src/` structure nearly intact (rename folders into
+packages, add local `package.json` files).
 
-Le seul module qui aurait un profil suffisamment autonome pour être extrait *seul* un jour est `converter` (2456 LOC, dépend juste de `formatter`, pas d'aller-retour avec `core`/`compiler`) — mais rien n'urge.
+The only module with a profile autonomous enough to be extracted *alone*
+someday is `converter` (2456 LOC, only depends on `formatter`, no
+back-and-forth with `core`/`compiler`) — but nothing is urgent.
 
-## Mise à jour 2026-07-06 : le plugin JetBrains, lui, sort du repo
+## Update 2026-07-06: the JetBrains plugin, on the other hand, does leave the repo
 
-Décision prise séparément (hors du sujet core/cli/converter ci-dessus) : `jetbrains-plugin/` va être extrait dans son propre repo git, `typeflow-idea-plugin`.
+Decision made separately (unrelated to the core/cli/converter topic
+above): `jetbrains-plugin/` is going to be extracted into its own git
+repo, `typeflow-idea-plugin`.
 
-Ce n'est pas une exception à la recommandation "pas de split" — c'est un cas différent, avec un calcul coût/bénéfice opposé :
+This isn't an exception to the "no split" recommendation — it's a
+different case, with an opposite cost/benefit calculation:
 
-- **Zéro couplage source.** Vérifié dans `TypeflowCli.kt` : le plugin shell-out vers le binaire `typeflow` sur le `PATH` (`ProcessBuilder("typeflow", "check", ...)`). Il ne dépend d'aucune source TS du monorepo, seulement du CLI compilé une fois publié.
-- **Toolchain complètement différente** : Gradle/Kotlin/IntelliJ Platform vs Bun/TS. Pas de tooling partagé, pas de lint/build unifié possible de toute façon.
-- **Cycle de release indépendant et imposé de l'extérieur** : la JetBrains Marketplace a son propre versioning, signing (`CERTIFICATE_CHAIN`, `PRIVATE_KEY`) et pipeline de publish — rien à voir avec `npm publish` du package TS.
-- **Historique quasi nul à préserver** : un seul commit (`d2d73cc wip: scaffold JetBrains/IntelliJ plugin`) touche ce dossier. L'extraction est une simple copie, pas un `git subtree split`.
+- **Zero source coupling.** Verified in `TypeflowCli.kt`: the plugin
+  shells out to the `typeflow` binary on the `PATH`
+  (`ProcessBuilder("typeflow", "check", ...)`). It depends on none of the
+  monorepo's TS sources, only on the CLI once compiled and published.
+- **Completely different toolchain**: Gradle/Kotlin/IntelliJ Platform vs
+  Bun/TS. No shared tooling, no unified lint/build possible anyway.
+- **Independent release cycle, imposed externally**: the JetBrains
+  Marketplace has its own versioning, signing (`CERTIFICATE_CHAIN`,
+  `PRIVATE_KEY`) and publish pipeline — nothing to do with `npm publish`
+  for the TS package.
+- **Almost no history to preserve**: only one commit
+  (`d2d73cc wip: scaffold JetBrains/IntelliJ plugin`) touches this
+  folder. The extraction is a simple copy, not a `git subtree split`.
 
-Donc : le split `core`/`cli`/`converter` reste déconseillé (couplage fort, même toolchain, même cycle de release, gain nul). L'extraction de `jetbrains-plugin/` est justifiée (couplage nul, toolchain différente, cycle de release externe imposé). Les deux décisions utilisent le même critère — couplage réel + toolchain partagée — elles pointent juste dans des directions opposées selon le module.
+So: the `core`/`cli`/`converter` split remains discouraged (strong
+coupling, same toolchain, same release cycle, zero gain). Extracting
+`jetbrains-plugin/` is justified (zero coupling, different toolchain,
+externally imposed release cycle). Both decisions use the same
+criterion — actual coupling + shared toolchain — they just point in
+opposite directions depending on the module.
 
-Plan d'extraction retenu : nouveau repo `typeflow-idea-plugin`, copie du contenu utile (`src/`, `build.gradle.kts`, `settings.gradle.kts`, `gradle/`, `gradlew*`, `README.md`) en excluant les artefacts de build (`.gradle/`, `.intellijPlatform/`, `.kotlin/`, `build/`), `.gitignore` local à recréer, puis `git rm -r jetbrains-plugin` dans `typeflow` une fois le nouveau repo vérifié.
+Extraction plan adopted: new repo `typeflow-idea-plugin`, copy the
+useful content (`src/`, `build.gradle.kts`, `settings.gradle.kts`,
+`gradle/`, `gradlew*`, `README.md`) excluding build artifacts
+(`.gradle/`, `.intellijPlatform/`, `.kotlin/`, `build/`), recreate a
+local `.gitignore`, then `git rm -r jetbrains-plugin` in `typeflow` once
+the new repo is verified.
+</content>
