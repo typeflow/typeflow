@@ -1,0 +1,217 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "runtime": "Bun 1.3.13",
+    "platform": "win32 x64",
+    "versions": {
+      "typeflow": "v0.0.1",
+      "jq": "v1.8.2 (WASM)",
+      "jsonata": "v2.2.1",
+      "native": "main"
+    },
+    "scenarios": [
+      "reshape",
+      "catalog"
+    ],
+    "engines": [
+      "typeflow",
+      "jq",
+      "jsonata",
+      "native"
+    ]
+  },
+  "measures": [
+    {
+      "scenario": "reshape",
+      "size": 10,
+      "engine": "typeflow",
+      "opsPerSec": 806910.6451831087,
+      "iterations": 245759,
+      "activeMs": 304.5677999999999
+    },
+    {
+      "scenario": "reshape",
+      "size": 10,
+      "engine": "jq",
+      "opsPerSec": 364.49658752384,
+      "iterations": 111,
+      "activeMs": 304.5296000000001
+    },
+    {
+      "scenario": "reshape",
+      "size": 10,
+      "engine": "jsonata",
+      "opsPerSec": 15746.815568767988,
+      "iterations": 5119,
+      "activeMs": 325.0815999999995
+    },
+    {
+      "scenario": "reshape",
+      "size": 10,
+      "engine": "native",
+      "opsPerSec": 4183052.73850826,
+      "iterations": 1310719,
+      "activeMs": 313.34030000000007
+    },
+    {
+      "scenario": "reshape",
+      "size": 1000,
+      "engine": "typeflow",
+      "opsPerSec": 25580.82360991097,
+      "iterations": 7679,
+      "activeMs": 300.1857999999995
+    },
+    {
+      "scenario": "reshape",
+      "size": 1000,
+      "engine": "jq",
+      "opsPerSec": 181.54697164797503,
+      "iterations": 55,
+      "activeMs": 302.9518999999991
+    },
+    {
+      "scenario": "reshape",
+      "size": 1000,
+      "engine": "jsonata",
+      "opsPerSec": 470.1454360385203,
+      "iterations": 143,
+      "activeMs": 304.1612000000009
+    },
+    {
+      "scenario": "reshape",
+      "size": 1000,
+      "engine": "native",
+      "opsPerSec": 79805.8809221566,
+      "iterations": 24575,
+      "activeMs": 307.9346999999998
+    },
+    {
+      "scenario": "reshape",
+      "size": 10000,
+      "engine": "typeflow",
+      "opsPerSec": 2102.320803190707,
+      "iterations": 767,
+      "activeMs": 364.8348999999994
+    },
+    {
+      "scenario": "reshape",
+      "size": 10000,
+      "engine": "jq",
+      "opsPerSec": 15.660668804521952,
+      "iterations": 6,
+      "activeMs": 383.12540000000035
+    },
+    {
+      "scenario": "reshape",
+      "size": 10000,
+      "engine": "jsonata",
+      "opsPerSec": 43.67409805708513,
+      "iterations": 15,
+      "activeMs": 343.4529999999986
+    },
+    {
+      "scenario": "reshape",
+      "size": 10000,
+      "engine": "native",
+      "opsPerSec": 6200.181977006923,
+      "iterations": 2047,
+      "activeMs": 330.15160000000014
+    },
+    {
+      "scenario": "catalog",
+      "size": 10,
+      "engine": "typeflow",
+      "opsPerSec": 346754.1635245662,
+      "iterations": 106495,
+      "activeMs": 307.1196000000018
+    },
+    {
+      "scenario": "catalog",
+      "size": 10,
+      "engine": "jq",
+      "opsPerSec": 459.6291339301431,
+      "iterations": 143,
+      "activeMs": 311.1204000000007
+    },
+    {
+      "scenario": "catalog",
+      "size": 10,
+      "engine": "jsonata",
+      "opsPerSec": 5211.297604374371,
+      "iterations": 1791,
+      "activeMs": 343.67639999999847
+    },
+    {
+      "scenario": "catalog",
+      "size": 10,
+      "engine": "native",
+      "opsPerSec": 1564483.8149643794,
+      "iterations": 524287,
+      "activeMs": 335.1182000000026
+    },
+    {
+      "scenario": "catalog",
+      "size": 1000,
+      "engine": "typeflow",
+      "opsPerSec": 2971.884643060058,
+      "iterations": 895,
+      "activeMs": 301.15569999999934
+    },
+    {
+      "scenario": "catalog",
+      "size": 1000,
+      "engine": "jq",
+      "opsPerSec": 31.106714695434075,
+      "iterations": 11,
+      "activeMs": 353.6214000000009
+    },
+    {
+      "scenario": "catalog",
+      "size": 1000,
+      "engine": "jsonata",
+      "opsPerSec": 44.88484312587034,
+      "iterations": 14,
+      "activeMs": 311.90929999999935
+    },
+    {
+      "scenario": "catalog",
+      "size": 1000,
+      "engine": "native",
+      "opsPerSec": 19479.37463057994,
+      "iterations": 6143,
+      "activeMs": 315.3592000000008
+    },
+    {
+      "scenario": "catalog",
+      "size": 10000,
+      "engine": "typeflow",
+      "opsPerSec": 479.3670184637694,
+      "iterations": 159,
+      "activeMs": 331.6874000000007
+    },
+    {
+      "scenario": "catalog",
+      "size": 10000,
+      "engine": "jq",
+      "opsPerSec": 5.353622850118888,
+      "iterations": 2,
+      "activeMs": 373.57880000000114
+    },
+    {
+      "scenario": "catalog",
+      "size": 10000,
+      "engine": "jsonata",
+      "opsPerSec": 6.237118401401555,
+      "iterations": 2,
+      "activeMs": 320.6609000000026
+    },
+    {
+      "scenario": "catalog",
+      "size": 10000,
+      "engine": "native",
+      "opsPerSec": 1803.7155913803153,
+      "iterations": 575,
+      "activeMs": 318.78639999999905
+    }
+  ]
+}

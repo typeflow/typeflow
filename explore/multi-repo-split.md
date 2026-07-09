@@ -22,24 +22,24 @@ that the converter is already thought of as an optional sub-module.
 - `./converter`, `./converter/jsonata`, `./converter/jq` → independent
 - `bin.typeflow` → `dist/cli/main.js`
 
-So the *logical* separation (core / runtime / converter / cli) already
+So the _logical_ separation (core / runtime / converter / cli) already
 exists at the exports level. The question isn't "should the code be
 split up" (already done) but "should the git repo / npm package be split
 up".
 
 ## Actual module sizes
 
-| Module | LOC | Role |
-|---|---|---|
+| Module      | LOC  | Role                                                        |
+| ----------- | ---- | ----------------------------------------------------------- |
 | `converter` | 2456 | jq/jsonata → typeflow (the biggest, and the most separable) |
-| `compiler` | 1163 | checker + dts emit |
-| `builtins` | 1132 | built-in functions |
-| `parser` | 914 | lexer/parser |
-| `cli` | 595 | commands + reports |
-| `core` | 649 | types, ast, diagnostics |
-| `runtime` | 398 | interpreter |
-| `formatter` | 351 | pretty-printer |
-| `adapter` | 198 | TS resolver |
+| `compiler`  | 1163 | checker + dts emit                                          |
+| `builtins`  | 1132 | built-in functions                                          |
+| `parser`    | 914  | lexer/parser                                                |
+| `cli`       | 595  | commands + reports                                          |
+| `core`      | 649  | types, ast, diagnostics                                     |
+| `runtime`   | 398  | interpreter                                                 |
+| `formatter` | 351  | pretty-printer                                              |
+| `adapter`   | 198  | TS resolver                                                 |
 
 Total ~7850 LOC. This is a **small project**. For comparison, splitting
 repos generally makes sense beyond 20-30k LOC per unit, or when
@@ -86,6 +86,7 @@ Concrete, not theoretical — what it would add:
 ## Expected vs. actual benefits
 
 Classic reasons to split:
+
 1. **Separate teams / ownership** → doesn't apply here (a single
    maintainer).
 2. **Different release cycles** → possible in theory (converter changes
@@ -118,7 +119,7 @@ cost of cross-repo synchronization — and it can be done while keeping
 the current `src/` structure nearly intact (rename folders into
 packages, add local `package.json` files).
 
-The only module with a profile autonomous enough to be extracted *alone*
+The only module with a profile autonomous enough to be extracted _alone_
 someday is `converter` (2456 LOC, only depends on `formatter`, no
 back-and-forth with `core`/`compiler`) — but nothing is urgent.
 

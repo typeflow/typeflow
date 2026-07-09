@@ -380,7 +380,7 @@ _Bars are normalized per size group (the group's max = full width): sizes differ
 
 ## Reading the numbers
 
-- The Typeflow runtime is **compiled into closures** (step 1 of \`explore/optimisation-runtime.md\`): the IR is walked once at preparation, not on every call. Identifier reads are also **statically resolved** where the checker can prove it's safe (step 2): a direct read at a known scope depth instead of a full dynamic walk. The gap remaining vs native is mostly the interpretive overhead that's left after both steps — see the study for what's next.
+- The Typeflow runtime is **compiled into closures**: the IR is walked once at preparation, not on every call. Identifier reads are **statically resolved** where the checker can prove it's safe: a direct read at a known scope depth instead of a full dynamic walk. Filters are **fused with their consumer**: \`arr[pred] -> {…}\`, \`arr[pred].name\` and \`sum\`/\`count\` over them run as one pass, without the intermediate arrays. The gap remaining vs native is mostly the per-element object allocation of projections.
 - Microbenchmark: synthetic data, indicative ratios, not absolute.
 - Raw data: [\`results.json\`](./results.json).
 

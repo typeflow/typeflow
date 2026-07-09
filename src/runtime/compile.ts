@@ -5,16 +5,20 @@
  * are all resolved here; execution is direct calls. No `eval` / `new
  * Function`, so strict CSP and the sandbox argument hold unchanged.
  *
+ * On top of that, identifiers annotated by the checker are read at a known
+ * scope depth instead of walking the env chain, and filter chains fuse with
+ * their consumer (`arr[pred] -> {…}`, `arr[pred].name`, `sum`/`count` over
+ * them) into a single pass without intermediate arrays.
+ *
  * Semantics are identical to the tree-walking interpreter
  * (./interpreter.ts, kept as the reference implementation); the equivalence
- * is asserted by tests. Identifier lookup stays dynamic — resolving it
- * statically from checker knowledge is the next planned step
- * (explore/optimisation-runtime.md, marche 2).
+ * is asserted by tests.
  */
 import {
   type CompiledFn,
   type CompiledMapping,
   type Expr,
+  type FilterExpr,
   type ObjectExpr,
   parentChainDepth,
 } from '../core';
@@ -42,6 +46,24 @@ function member(value: unknown, name: string): unknown {
     return (value as Record<string, unknown>)[name];
   }
   return undefined;
+}
+
+/** `a[p1][p2]…` flattened: the non-filter base and predicates in filter order. */
+function filterChain(expr: FilterExpr): { base: Expr; preds: Expr[] } {
+  const preds: Expr[] = [];
+  let base: Expr = expr;
+  while (base.kind === 'filter') {
+    preds.unshift(base.predicate);
+    base = base.object;
+  }
+  return { base, preds };
+}
+
+function matches(preds: Op[], elEnv: Env): boolean {
+  for (let i = 0; i < preds.length; i++) {
+    if (!preds[i]!(elEnv)) return false;
+  }
+  return true;
 }
 
 /** Compile a checked artifact into an executable function. Called by createMapping. */
@@ -97,6 +119,162 @@ export function compileMapping(
         return e.bindings[name];
     }
     return undefined;
+  }
+
+  // ---- Operator fusion ----
+  // A filter chain and its consumer run as ONE pass over the source array:
+  // `arr[pred] -> {…}` (filter+project), `arr[pred].name` (filter+member) and
+  // `sum`/`count` over those (accumulate in the pass) never materialize the
+  // intermediate arrays the unfused forms allocate.
+
+  const defExternalMemo = new Map<string, boolean>();
+
+  function defUsesExternal(def: CompiledFn): boolean {
+    const memo = defExternalMemo.get(def.name);
+    if (memo !== undefined) return memo;
+    // Cycle guard: a recursive call adds no external use by itself.
+    defExternalMemo.set(def.name, false);
+    const result = usesExternal(def.body);
+    defExternalMemo.set(def.name, result);
+    return result;
+  }
+
+  function objectUsesExternal(node: ObjectExpr): boolean {
+    return (
+      (node.lets ?? []).some((l) => usesExternal(l.value)) ||
+      node.props.some((p) => usesExternal(p.value))
+    );
+  }
+
+  /** Can evaluating this expression reach a user-provided external function? */
+  function usesExternal(expr: Expr): boolean {
+    switch (expr.kind) {
+      case 'lit':
+      case 'ident':
+        return false;
+      case 'member':
+        return usesExternal(expr.object);
+      case 'bracket':
+        return usesExternal(expr.object) || usesExternal(expr.inner);
+      case 'index':
+        return usesExternal(expr.object) || usesExternal(expr.index);
+      case 'filter':
+        return usesExternal(expr.object) || usesExternal(expr.predicate);
+      case 'sort':
+        return (
+          usesExternal(expr.object) ||
+          expr.terms.some((t) => usesExternal(t.key))
+        );
+      case 'project':
+        return usesExternal(expr.object) || objectUsesExternal(expr.body);
+      case 'unary':
+        return usesExternal(expr.operand);
+      case 'binary':
+        return usesExternal(expr.left) || usesExternal(expr.right);
+      case 'cond':
+        return (
+          usesExternal(expr.cond) ||
+          usesExternal(expr.then) ||
+          usesExternal(expr.else)
+        );
+      case 'call': {
+        if (expr.args.some((a) => usesExternal(a))) return true;
+        // Same shadowing order as the call compilation: external > def >
+        // builtin. Builtins are pure by construction.
+        if (typeof external[expr.name] === 'function') return true;
+        const def = defs.get(expr.name);
+        return def !== undefined && defUsesExternal(def);
+      }
+      case 'object':
+        return objectUsesExternal(expr);
+      case 'array':
+        return expr.elements.some((e) => usesExternal(e));
+    }
+  }
+
+  /**
+   * Compile a filter chain for a fused single pass, or null when fusion is
+   * not allowed. Fusion keeps each stage's own call order but interleaves
+   * the stages per element instead of running them per stage — observable
+   * only if TWO stages call impure external functions, so fusion requires at
+   * most one stage (predicate, or the consumer's `body`) that can reach an
+   * external. The unfused forms remain the fallback, never an error.
+   */
+  function fuseFilter(
+    expr: FilterExpr,
+    body?: ObjectExpr,
+  ): { base: Op; preds: Op[] } | null {
+    const { base, preds } = filterChain(expr);
+    let impure = 0;
+    for (const pred of preds) if (usesExternal(pred)) impure++;
+    if (body !== undefined && objectUsesExternal(body)) impure++;
+    if (impure > 1) return null;
+    return { base: compileExpr(base), preds: preds.map((p) => compileExpr(p)) };
+  }
+
+  /**
+   * `count(arr[pred])`, `sum(arr[pred])` and `sum(arr[pred].name)` fused:
+   * an accumulator replaces both the filtered array and (for the member
+   * form) the projected number array. Mirrors the builtins exactly: `count`
+   * is the number of kept elements; `sum` adds number values only and
+   * returns 0 for an empty selection.
+   */
+  function compileFusedAggregate(name: string, arg: Expr): Op | null {
+    if (name === 'count' && arg.kind === 'filter') {
+      const fused = fuseFilter(arg);
+      if (!fused) return null;
+      const { base, preds } = fused;
+      return (env) => {
+        const target = base(env);
+        if (!Array.isArray(target)) return 0;
+        let n = 0;
+        for (const el of target) {
+          if (matches(preds, { element: el, parent: env })) n++;
+        }
+        return n;
+      };
+    }
+    if (name !== 'sum') return null;
+    if (arg.kind === 'filter') {
+      const fused = fuseFilter(arg);
+      if (!fused) return null;
+      const { base, preds } = fused;
+      return (env) => {
+        const target = base(env);
+        if (!Array.isArray(target)) return 0;
+        let acc = 0;
+        for (const el of target) {
+          // Predicates run on every element (like the unfused filter pass);
+          // the number check mirrors the builtin's numArr on the survivors.
+          if (
+            matches(preds, { element: el, parent: env }) &&
+            typeof el === 'number'
+          ) {
+            acc += el;
+          }
+        }
+        return acc;
+      };
+    }
+    if (arg.kind === 'member' && arg.object.kind === 'filter') {
+      const fused = fuseFilter(arg.object);
+      if (!fused) return null;
+      const { base, preds } = fused;
+      const memberName = arg.name;
+      return (env) => {
+        const target = base(env);
+        if (!Array.isArray(target)) return 0;
+        let acc = 0;
+        for (const el of target) {
+          if (matches(preds, { element: el, parent: env })) {
+            const v = member(el, memberName);
+            if (typeof v === 'number') acc += v;
+          }
+        }
+        return acc;
+      };
+    }
+    return null;
   }
 
   function compileObject(node: ObjectExpr): Op {
@@ -189,6 +367,26 @@ export function compileMapping(
         if (objDepth !== null) {
           return (env) => member(nthParentElement(env, objDepth), name);
         }
+        if (expr.object.kind === 'filter') {
+          // `arr[pred].name` fused: member access distributes over the filter
+          // result (always an array), so matching elements project straight
+          // into the output without materializing the filtered array.
+          const fused = fuseFilter(expr.object);
+          if (fused) {
+            const { base, preds } = fused;
+            return (env) => {
+              const target = base(env);
+              if (!Array.isArray(target)) return [];
+              const out: unknown[] = [];
+              for (const el of target) {
+                if (matches(preds, { element: el, parent: env })) {
+                  out.push(member(el, name));
+                }
+              }
+              return out;
+            };
+          }
+        }
         const obj = compileExpr(expr.object);
         return (env) => member(obj(env), name);
       }
@@ -206,6 +404,24 @@ export function compileMapping(
       }
 
       case 'filter': {
+        if (expr.object.kind === 'filter') {
+          // `a[p1][p2]` fused: chained predicates run in one pass, without
+          // the intermediate array per filter level. Predicate scopes are
+          // siblings ({element, parent}), so one env serves every predicate.
+          const fused = fuseFilter(expr);
+          if (fused) {
+            const { base, preds } = fused;
+            return (env) => {
+              const target = base(env);
+              if (!Array.isArray(target)) return [];
+              const out: unknown[] = [];
+              for (const el of target) {
+                if (matches(preds, { element: el, parent: env })) out.push(el);
+              }
+              return out;
+            };
+          }
+        }
         const obj = compileExpr(expr.object);
         const pred = compileExpr(expr.predicate);
         return (env) => {
@@ -254,10 +470,53 @@ export function compileMapping(
         );
 
       case 'project': {
-        const obj = compileExpr(expr.object);
-        const body = compileObject(expr.body);
         const binder = expr.binder;
         const indexBinder = expr.indexBinder;
+        if (expr.object.kind === 'filter') {
+          // `arr[pred] -> {…}` fused: filter and projection in one pass, no
+          // intermediate filtered array.
+          const fused = fuseFilter(expr.object, expr.body);
+          if (fused) {
+            const { base, preds } = fused;
+            const body = compileObject(expr.body);
+            if (binder === undefined && indexBinder === undefined) {
+              return (env) => {
+                const target = base(env);
+                if (!Array.isArray(target)) return [];
+                const out: unknown[] = [];
+                for (const el of target) {
+                  // Predicates and body see the same scope shape
+                  // ({element, parent}), so one env serves the whole element.
+                  const elEnv: Env = { element: el, parent: env };
+                  if (matches(preds, elEnv)) out.push(body(elEnv));
+                }
+                return out;
+              };
+            }
+            return (env) => {
+              const target = base(env);
+              if (!Array.isArray(target)) return [];
+              const out: unknown[] = [];
+              // The index binder counts kept elements — the element's
+              // position in the (never materialized) filtered array.
+              let kept = 0;
+              for (const el of target) {
+                // Binders must not be visible to the predicates, so the body
+                // gets its own env carrying the bindings.
+                if (matches(preds, { element: el, parent: env })) {
+                  const bindings: Record<string, unknown> = {};
+                  if (binder !== undefined) bindings[binder] = el;
+                  if (indexBinder !== undefined) bindings[indexBinder] = kept;
+                  kept++;
+                  out.push(body({ element: el, bindings, parent: env }));
+                }
+              }
+              return out;
+            };
+          }
+        }
+        const obj = compileExpr(expr.object);
+        const body = compileObject(expr.body);
         if (binder === undefined && indexBinder === undefined) {
           // No binder: skip the per-element bindings object entirely.
           return (env) => {
@@ -305,11 +564,21 @@ export function compileMapping(
       }
 
       case 'call': {
-        const args = expr.args.map((a) => compileExpr(a));
-        const arity = args.length;
         // Call target frozen at preparation: external > def > builtin, the
         // interpreter's env-chain order (both live on the global env).
         const ext = external[expr.name];
+        // Aggregation fusion, only when the name actually resolves to the
+        // builtin (an external or a def with the same name shadows it).
+        if (
+          typeof ext !== 'function' &&
+          !defs.has(expr.name) &&
+          expr.args.length === 1
+        ) {
+          const fused = compileFusedAggregate(expr.name, expr.args[0]!);
+          if (fused) return fused;
+        }
+        const args = expr.args.map((a) => compileExpr(a));
+        const arity = args.length;
         if (typeof ext === 'function') {
           return (env) => {
             const vals: unknown[] = [];

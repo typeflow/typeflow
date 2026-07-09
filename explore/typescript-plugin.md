@@ -351,7 +351,7 @@ A standalone Node example was added and validated, with no
   designed to be opened in an editor (hover, autocomplete, update after
   save).
 - `cross-import-demo.ts` — `import mapUser, { type Input } from
-  "../api-response/user.typeflow"`: a **cross-directory** import of a
+"../api-response/user.typeflow"`: a **cross-directory** import of a
   mapping from another example, which declares an external type
   (`ApiUser from "./user-types"`, not inline). Validated that the plugin
   resolves the external type via `createTypeScriptResolver()` relative
@@ -367,7 +367,7 @@ A standalone Node example was added and validated, with no
 ## Second mechanism built: running `.typeflow` outside Bun (`src/node-loader/`)
 
 Follow-up question raised along the way: the TS plugin makes the import
-*typed*, but `hover-demo.ts`/`cross-import-demo.ts` are only runnable
+_typed_, but `hover-demo.ts`/`cross-import-demo.ts` are only runnable
 with the Bun plugin (`@thomasfarineau/typeflow/plugin`, preloaded via
 `bunfig.toml`) — plain `tsx`/`ts-node`/`node` fail with
 `ERR_UNKNOWN_FILE_EXTENSION` (no loader for `.typeflow`).
@@ -390,11 +390,11 @@ Ada Lovelace { city: 'London', country: 'unknown' }
 
 Resulting complete matrix:
 
-| Need                               | Mechanism                                    |
-| ----------------------------------- | --------------------------------------------- |
-| IDE inference (hover/autocomplete)  | `@thomasfarineau/typeflow/ts-plugin`          |
-| Running under Bun                   | `@thomasfarineau/typeflow/plugin`             |
-| Running under Node/tsx/ts-node      | `@thomasfarineau/typeflow/node-loader`        |
+| Need                               | Mechanism                              |
+| ---------------------------------- | -------------------------------------- |
+| IDE inference (hover/autocomplete) | `@thomasfarineau/typeflow/ts-plugin`   |
+| Running under Bun                  | `@thomasfarineau/typeflow/plugin`      |
+| Running under Node/tsx/ts-node     | `@thomasfarineau/typeflow/node-loader` |
 
 ## Current state: removed from the code
 
