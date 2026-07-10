@@ -1,9 +1,8 @@
 /** `fmt` — rewrite mappings in canonical form. */
+import { format, formatDiagnostic } from 'typeflow-js';
 import { readFile, writeFile } from 'node:fs/promises';
-import { color } from '../reports';
-import { expandFiles } from '../glob';
-import { format } from '../../formatter';
-import { formatDiagnostic } from '../../core';
+import { color } from '#reports';
+import { expandFiles } from '#glob';
 import { relative } from 'node:path';
 
 export async function cmdFmt(

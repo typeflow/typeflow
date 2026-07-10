@@ -1,4 +1,4 @@
-/** Public library surface of the CLI package (also used by the umbrella loader). */
+/** Public library surface of the CLI package. */
 export { expandFiles } from './glob';
 export {
   color,
@@ -10,4 +10,3 @@ export {
   writeDts,
   type FileReport,
 } from './reports';
-export { loadExternalFunctions } from './external';

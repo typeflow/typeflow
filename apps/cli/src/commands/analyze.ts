@@ -7,11 +7,10 @@ import {
   inferredOutput,
   printDiagnostics,
   writeDts,
-} from '../reports';
+} from '#reports';
+import { createTypeScriptResolver, emitDts } from 'typeflow-js';
 import { existsSync, watch } from 'node:fs';
-import { createTypeScriptResolver } from '../../adapter';
-import { emitDts } from '../../compiler';
-import { expandFiles } from '../glob';
+import { expandFiles } from '#glob';
 import { readFile } from 'node:fs/promises';
 import { relative } from 'node:path';
 

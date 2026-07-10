@@ -2,13 +2,15 @@
 import {
   compile,
   type CompileResult,
+  createTypeScriptResolver,
+  type Diagnostic,
   emitDts,
+  formatDiagnostic,
   type TypeResolver,
-} from '../compiler';
-import { type Diagnostic, formatDiagnostic, typeToString } from '../core';
+  typeToString,
+} from 'typeflow-js';
 import { readFile, writeFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
-import { createTypeScriptResolver } from '../adapter';
 
 export const color = process.stderr.isTTY ?? false;
 

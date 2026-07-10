@@ -1,7 +1,6 @@
 /** `run` — execute a mapping against JSON from a file or stdin. */
-import { compileFile, printDiagnostics } from '../reports';
-import { createMapping } from '../../runtime';
-import { loadExternalFunctions } from '../external';
+import { compileFile, printDiagnostics } from '#reports';
+import { createMapping, loadExternalFunctions } from 'typeflow-js';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { text } from 'node:stream/consumers';

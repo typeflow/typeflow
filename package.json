@@ -18,9 +18,6 @@
     "type": "git",
     "url": "https://github.com/thomasfarineau/typeflow"
   },
-  "bin": {
-    "typeflow": "./dist/cli/main.js"
-  },
   "files": [
     "dist",
     "src"
@@ -57,10 +54,11 @@
     "access": "public"
   },
   "scripts": {
-    "typeflow": "bun src/cli/main.ts",
-    "build": "bun scripts/build.ts",
-    "typecheck": "bun src/cli/main.ts types \"examples/**/*.typeflow\" && tsc --noEmit",
-    "check:examples": "bun src/cli/main.ts check \"examples/**/*.typeflow\"",
+    "postinstall": "bun scripts/link-local-deps.ts",
+    "typeflow": "bun apps/cli/src/main.ts",
+    "build": "bun scripts/build.ts && bun run --cwd apps/cli build",
+    "typecheck": "bun apps/cli/src/main.ts types \"examples/**/*.typeflow\" && tsc --noEmit",
+    "check:examples": "bun apps/cli/src/main.ts check \"examples/**/*.typeflow\"",
     "demo": "bun examples/api-response/demo.ts",
     "docs:dev": "bun scripts/generate-docs.ts && bun scripts/bench/publish.ts && vitepress dev docs",
     "docs:build": "bun scripts/generate-docs.ts && bun scripts/bench/publish.ts && vitepress build docs",

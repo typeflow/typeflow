@@ -41,12 +41,16 @@ async function walkFiles(dir: string, out: string[]): Promise<void> {
   }
 }
 
-export async function expandFiles(patterns: string[]): Promise<string[]> {
-  if (patterns.length === 0) patterns = ['**/*.typeflow'];
+/** Like {@link expandFiles}, but for an arbitrary extension (e.g. `.jsonata`, `.jq`). */
+export async function expandFilesByExtension(
+  patterns: string[],
+  extension: string,
+): Promise<string[]> {
+  if (patterns.length === 0) patterns = [`**/*${extension}`];
   const files = new Set<string>();
   let candidates: string[] | null = null;
   for (const pattern of patterns) {
-    if (existsSync(pattern) && pattern.endsWith('.typeflow')) {
+    if (existsSync(pattern) && pattern.endsWith(extension)) {
       files.add(resolve(pattern));
       continue;
     }
@@ -56,10 +60,14 @@ export async function expandFiles(patterns: string[]): Promise<string[]> {
     }
     const regex = globToRegex(pattern);
     for (const f of candidates) {
-      if (!f.endsWith('.typeflow')) continue;
+      if (!f.endsWith(extension)) continue;
       const rel = relative(process.cwd(), f).replace(/\\/g, '/');
       if (regex.test(rel)) files.add(f);
     }
   }
   return [...files].toSorted();
+}
+
+export async function expandFiles(patterns: string[]): Promise<string[]> {
+  return expandFilesByExtension(patterns, '.typeflow');
 }

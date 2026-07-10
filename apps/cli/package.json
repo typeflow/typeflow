@@ -1,0 +1,35 @@
+{
+  "name": "@typeflow/cli",
+  "version": "0.0.1",
+  "description": "Typeflow CLI — check, format, and run .typeflow mappings from the command line",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasfarineau/typeflow"
+  },
+  "bin": {
+    "typeflow": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "imports": {
+    "#reports": "./src/reports.ts",
+    "#glob": "./src/glob.ts"
+  },
+  "scripts": {
+    "typeflow": "bun src/main.ts",
+    "build": "bun scripts/build.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^15.0.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
