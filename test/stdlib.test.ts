@@ -1,7 +1,5 @@
+import { compile, createMapping, typeToString } from 'typeflow-js';
 import { describe, expect, test } from 'bun:test';
-import { compile } from 'typeflow-js';
-import { createMapping } from 'typeflow-js';
-import { typeToString } from 'typeflow-js';
 
 function run(expr: string, input: unknown = {}, inputDecl = ''): unknown {
   const source = `${inputDecl}\nmap { v: ${expr} }`;
