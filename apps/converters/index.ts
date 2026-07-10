@@ -4,9 +4,9 @@
  * (`input: 'infer' | 'none' | { sample }`) and adapts it to the native
  * surface (which takes the sample as JSON text).
  */
-import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { createRequire } from 'node:module';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 export interface ConvertOptions {
