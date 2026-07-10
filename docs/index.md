@@ -152,7 +152,7 @@ Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"
 ## Get started in a minute
 
 ```console
-$ bun add -d @thomasfarineau/typeflow
+$ bun add -d typeflow-js
 $ bunx typeflow init                 # scaffold an example mapping
 $ bunx typeflow check                # tsc-style diagnostics
 $ bunx typeflow run user.typeflow --input data.json

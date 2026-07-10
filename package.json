@@ -1,5 +1,5 @@
 {
-  "name": "@thomasfarineau/typeflow",
+  "name": "typeflow-js",
   "version": "0.0.1",
   "description": "Typed JSON transformations, checked at compile time. Declarative .typeflow mapping files with TypeScript-native typing.",
   "keywords": [

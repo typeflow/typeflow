@@ -2,7 +2,7 @@ import {
   compileTypeflowFile,
   createMapping,
   typeToString,
-} from "@thomasfarineau/typeflow";
+} from "typeflow-js";
 import { fileURLToPath } from "node:url";
 import sample from "./sample.json";
 

@@ -9,7 +9,7 @@ Typeflow permet d'écrire des transformations JSON dans des fichiers `.typeflow`
 Un seul paquet, aucune configuration — fonctionne avec Node (≥ 18), npm, pnpm ou Bun :
 
 ```console
-$ npm i @thomasfarineau/typeflow
+$ npm i typeflow-js
 ```
 
 ::: warning Pré-version
@@ -56,19 +56,19 @@ $ echo '{"id":1,"firstName":"Ada","lastName":"Lovelace","labels":[]}' | npx type
 [fonctions `use`](/fr/functions/custom#use), et retourne une fonction de mapping prête à l'emploi :
 
 ```ts
-import { loadTypeflowMapping } from '@thomasfarineau/typeflow';
+import { loadTypeflowMapping } from 'typeflow-js';
 
 const mapUser = await loadTypeflowMapping('./user.typeflow');
 const view = mapUser(apiResponse);
 ```
 
 Pour les chemins chauds, compilez une fois et sérialisez : l'artefact compilé est du JSON pur, et
-`@thomasfarineau/typeflow/runtime` est un minuscule interpréteur sans dépendance que vous pouvez embarquer seul
+`typeflow-js/runtime` est un minuscule interpréteur sans dépendance que vous pouvez embarquer seul
 (il tourne même dans le navigateur — le [playground](/fr/playground) n'est rien d'autre que ça).
 
 ```ts
-import { compile } from '@thomasfarineau/typeflow';
-import { createMapping } from '@thomasfarineau/typeflow/runtime';
+import { compile } from 'typeflow-js';
+import { createMapping } from 'typeflow-js/runtime';
 
 const { compiled } = compile(source, { fileName: 'user.typeflow' });
 const mapUser = createMapping(compiled!);

@@ -115,7 +115,7 @@ must add to its `tsconfig.json`:
 ```jsonc
 {
   "compilerOptions": {
-    "plugins": [{ "name": "@thomasfarineau/typeflow/ts-plugin" }],
+    "plugins": [{ "name": "typeflow-js/ts-plugin" }],
   },
 }
 ```
@@ -143,7 +143,7 @@ config file. Doesn't solve file latency nor the editing experience of the
 
 ### B. Real Language Service Plugin (medium)
 
-Subpath of the existing package `@thomasfarineau/typeflow/ts-plugin` (not
+Subpath of the existing package `typeflow-js/ts-plugin` (not
 a new separate package — consistent with a single `npm i`):
 
 - Implements `resolveModuleNameLiterals` + virtual files (option B above)
@@ -260,7 +260,7 @@ inline).
 ## Implementation (scope B)
 
 Done, in `src/ts-plugin/index.ts`, exported as a subpath of the package
-(`@thomasfarineau/typeflow/ts-plugin`) — not a new separate npm package,
+(`typeflow-js/ts-plugin`) — not a new separate npm package,
 consistent with the "single `npm i`" principle.
 
 ### What the code does
@@ -331,7 +331,7 @@ Behavior inside a real `tsserver` driven by VS Code/an editor — tested
 here via a harness that reproduces the real API and call order
 (`LanguageService` built before the patch), but not via a real editor
 session. To do before documenting the feature as stable: add
-`"plugins": [{ "name": "@thomasfarineau/typeflow/ts-plugin" }]` to a
+`"plugins": [{ "name": "typeflow-js/ts-plugin" }]` to a
 consuming project's `tsconfig.json` and open `consumer.ts` in VS Code to
 confirm hover/autocomplete under real conditions.
 
@@ -368,7 +368,7 @@ A standalone Node example was added and validated, with no
 
 Follow-up question raised along the way: the TS plugin makes the import
 _typed_, but `hover-demo.ts`/`cross-import-demo.ts` are only runnable
-with the Bun plugin (`@thomasfarineau/typeflow/plugin`, preloaded via
+with the Bun plugin (`typeflow-js/plugin`, preloaded via
 `bunfig.toml`) — plain `tsx`/`ts-node`/`node` fail with
 `ERR_UNKNOWN_FILE_EXTENSION` (no loader for `.typeflow`).
 
@@ -376,7 +376,7 @@ Answer: a native Node loader hook (`node:module` `register()` — the
 mechanism `tsx` itself is built on, visible in its own stack trace:
 `node:internal/modules/customization_hooks`). Same codegen as the Bun
 plugin (compile once, emit a small `createMapping(<JSON artifact>)`
-module), exposed as a subpath `@thomasfarineau/typeflow/node-loader`.
+module), exposed as a subpath `typeflow-js/node-loader`.
 
 Actually validated, not just in theory:
 
@@ -390,11 +390,11 @@ Ada Lovelace { city: 'London', country: 'unknown' }
 
 Resulting complete matrix:
 
-| Need                               | Mechanism                              |
-| ---------------------------------- | -------------------------------------- |
-| IDE inference (hover/autocomplete) | `@thomasfarineau/typeflow/ts-plugin`   |
-| Running under Bun                  | `@thomasfarineau/typeflow/plugin`      |
-| Running under Node/tsx/ts-node     | `@thomasfarineau/typeflow/node-loader` |
+| Need                               | Mechanism                 |
+| ---------------------------------- | ------------------------- |
+| IDE inference (hover/autocomplete) | `typeflow-js/ts-plugin`   |
+| Running under Bun                  | `typeflow-js/plugin`      |
+| Running under Node/tsx/ts-node     | `typeflow-js/node-loader` |
 
 ## Current state: removed from the code
 
@@ -405,7 +405,7 @@ associated wiring (`package.json` exports, `scripts/build.ts`,
 code** — nothing was left in place.
 
 The pre-existing Bun plugin (`src/plugin/index.ts`,
-`examples/bun-plugin/`, subpath `@thomasfarineau/typeflow/plugin`) was
+`examples/bun-plugin/`, subpath `typeflow-js/plugin`) was
 removed right after, at explicit request — it wasn't an addition from
 this session but an already-shipped feature. With all three mechanisms
 gone, there is no longer any way to run a `.typeflow` import directly

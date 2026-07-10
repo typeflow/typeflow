@@ -15,13 +15,13 @@
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@thomasfarineau/typeflow": ["./src/index.ts"],
-      "@thomasfarineau/typeflow/runtime": ["./src/runtime/index.ts"],
-      "@thomasfarineau/typeflow/converter": ["./src/converter/index.ts"],
-      "@thomasfarineau/typeflow/converter/jsonata": [
+      "typeflow-js": ["./src/index.ts"],
+      "typeflow-js/runtime": ["./src/runtime/index.ts"],
+      "typeflow-js/converter": ["./src/converter/index.ts"],
+      "typeflow-js/converter/jsonata": [
         "./src/converter/jsonata/index.ts"
       ],
-      "@thomasfarineau/typeflow/converter/jq": [
+      "typeflow-js/converter/jq": [
         "./src/converter/jq/index.ts"
       ]
     }

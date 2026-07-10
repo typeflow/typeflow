@@ -72,7 +72,7 @@ $ typeflow infer user.typeflow
 ## Quick start
 
 ```console
-$ bun add -d @thomasfarineau/typeflow
+$ bun add -d typeflow-js
 $ bunx typeflow init                 # scaffold an example mapping
 $ bunx typeflow check                # tsc-style diagnostics
 $ bunx typeflow infer user.typeflow  # print the inferred output type
@@ -90,7 +90,7 @@ Enable typed imports in `tsconfig.json`:
 ### Programmatic API
 
 ```ts
-import { loadTypeflowMapping } from '@thomasfarineau/typeflow';
+import { loadTypeflowMapping } from 'typeflow-js';
 
 const mapUser = await loadTypeflowMapping('./user.typeflow');
 const view = mapUser(apiResponse);
