@@ -15,9 +15,6 @@ rmSync(`${root}dist`, { recursive: true, force: true });
 const libEntries = [
   `${root}src/index.ts`,
   `${root}src/runtime/index.ts`,
-  `${root}src/converter/index.ts`,
-  `${root}src/converter/jsonata/index.ts`,
-  `${root}src/converter/jq/index.ts`,
 ];
 // The TS adapter loads the consumer's own TypeScript; never bundle it.
 const external = ['typescript'];

@@ -1,0 +1,30 @@
+{
+  "name": "@typeflow/converters",
+  "version": "0.0.1",
+  "description": "Typeflow converters (jq / JSONata to Typeflow) as a native Node.js addon, written in Rust",
+  "license": "MIT",
+  "author": "Thomas Farineau",
+  "files": [
+    "dist",
+    "index.d.ts",
+    "*.node"
+  ],
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "bun scripts/build.ts",
+    "test": "cargo test"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
+}

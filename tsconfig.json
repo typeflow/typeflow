@@ -16,14 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "typeflow-js": ["./src/index.ts"],
-      "typeflow-js/runtime": ["./src/runtime/index.ts"],
-      "typeflow-js/converter": ["./src/converter/index.ts"],
-      "typeflow-js/converter/jsonata": [
-        "./src/converter/jsonata/index.ts"
-      ],
-      "typeflow-js/converter/jq": [
-        "./src/converter/jq/index.ts"
-      ]
+      "typeflow-js/runtime": ["./src/runtime/index.ts"]
     }
   },
   "include": [

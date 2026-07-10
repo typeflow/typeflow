@@ -4,15 +4,13 @@
  *  - functions/*.md — one page per builtin group in src/builtins/*, plus
  *    index.md (searchable FnIndex) and custom.md
  *  - reference/diagnostics.md — every TF-code, from scripts/doc-pages/diagnostics.ts
- *  - migration/jsonata.md
- *  - migration/jq.md
  * Nothing under these directories is written by hand (all are gitignored).
  * Run with: bun scripts/generate-docs (wired into docs:gen / docs:dev / docs:build).
  *
- * Everything claimable is verified at generation time: migration examples
- * must convert AND compile, diagnostic examples must emit their code, every
- * TF-code present in src/ must be documented — and every French translation
- * must exist (scripts/doc-pages/i18n/*), or the build fails.
+ * Everything claimable is verified at generation time: diagnostic examples
+ * must emit their code, every TF-code present in src/ must be documented —
+ * and every French translation must exist (scripts/doc-pages/i18n/*), or the
+ * build fails.
  */
 import { DOC_PAGES, type DocExample } from './doc-pages';
 import {
@@ -20,8 +18,6 @@ import {
   FR_DIAGNOSTICS_INTRO,
   FR_FUNCTIONS_INDEX_INTRO,
   FR_LABELS,
-  frJqMigrationBody,
-  frMigrationBody,
 } from './doc-pages/i18n/fr-pages';
 import {
   FR_FUNCTION_DOCS,
@@ -39,18 +35,12 @@ import { BENCH_SCENARIOS } from './bench/scenarios';
 import { type Builtin } from '../src/builtins/types';
 import { BUILTIN_GROUPS } from '../src/builtins/index';
 import { compile } from '../src/compiler/index';
-import { convertJq, convertJsonata } from '../src/converter';
 import { createMapping } from '../src/runtime/index';
 import { DIAGNOSTICS } from './doc-pages/diagnostics';
 import { fileURLToPath } from 'node:url';
-import { format } from '../src/formatter';
 import { FR_DIAGNOSTICS } from './doc-pages/i18n/fr-diagnostics';
 import { FR_OPERATOR_PAGES } from './doc-pages/i18n/fr-operators';
 import { join } from 'node:path';
-import { json as jqJson } from 'jq-wasm';
-import jsonata from 'jsonata';
-import { JQ_MIGRATION_EXAMPLES } from '../src/converter/jq/examples';
-import { MIGRATION_EXAMPLES } from '../src/converter/jsonata/examples';
 
 type Locale = 'en' | 'fr';
 const LOCALES: Locale[] = ['en', 'fr'];
@@ -335,7 +325,7 @@ createMapping(compiled, { functions: { slugify } });
 Register functions once, application-side — no \`use\` line needed in the mappings. A definition is declared like a builtin: typed signature, doc, implementation:
 
 \`\`\`ts
-import { defineFunction, compile, createMapping } from '@thomasfarineau/typeflow';
+import { defineFunction, compile, createMapping } from 'typeflow-js';
 
 const slugify = defineFunction('slugify(value: string): string', {
   doc: 'Lowercase, dash-separated slug.',
@@ -387,279 +377,6 @@ map {
 { "name": "ada lovelace" }
 \`\`\`
 :::
-`;
-}
-
-// ---- migration/jsonata.md: every example is converted by the real
-// ---- converter at generation time, then compiled — a wrong conversion
-// ---- fails the docs build instead of shipping.
-
-/** Converts + compiles every migration example (once), returns the worked example. */
-function verifyMigrationExamples(): { jsonata: string; typeflow: string } {
-  for (const ex of MIGRATION_EXAMPLES) {
-    const converted = convertJsonata(ex.jsonata, { input: 'none' });
-    if (!converted.ok) {
-      throw new Error(
-        `Migration example '${ex.title}' failed to convert: ${converted.errors.join('; ')}`,
-      );
-    }
-    const source = `input data: ${ex.inputType}\n\n${converted.typeflow.trim()}`;
-    const errors = compile(source).diagnostics.filter(
-      (d) => d.severity === 'error',
-    );
-    if (errors.length > 0) {
-      throw new Error(
-        `Migration example '${ex.title}' does not compile: ${errors[0]!.message}`,
-      );
-    }
-  }
-
-  // The "Putting it together" example is converted here (not just validated
-  // above) and rendered verbatim on the page, so the worked example is
-  // literally what the converter produces.
-  const worked = MIGRATION_EXAMPLES.find(
-    (e) => e.title === 'Putting it together',
-  );
-  if (!worked) {
-    throw new Error("Missing 'Putting it together' migration example.");
-  }
-  const workedSource = `input data: ${worked.inputType}\n\n${convertJsonata(
-    worked.jsonata,
-    { input: 'none' },
-  ).typeflow.trim()}`;
-  // Format the whole thing so the long inline input type wraps like the rest.
-  return {
-    jsonata: worked.jsonata,
-    typeflow: format(workedSource).formatted.trim(),
-  };
-}
-
-function renderJsonataMigrationPage(
-  locale: Locale,
-  worked: { jsonata: string; typeflow: string },
-): string {
-  const workedBody =
-    MIGRATION_EXAMPLES.find((e) => e.title === 'Putting it together')?.body ??
-    '';
-
-  // Full-width page (aside off, width caps lifted via the .tf-wide marker —
-  // see custom.css): the live converter deserves the whole viewport.
-  const head = (title: string) => `---
-order: 1
-aside: false
-outline: false
-editLink: false
-lastUpdated: false
----
-
-${BANNER}
-
-<div class="tf-wide"></div>
-
-# ${title}`;
-
-  if (locale === 'fr') {
-    return `${head(FR_LABELS.migrationTitle)}
-
-${frMigrationBody(worked)}
-`;
-  }
-
-  return `${head('From JSONata')}
-
-Paste a JSONata mapping into the [playground](#playground) and get equivalent, typed Typeflow back. The converter translates the declarative subset faithfully and **reports anything it can't** rather than guessing — so a conversion is either correct or a clear error, never a silent surprise.
-
-## What converts
-
-| JSONata | Typeflow | Notes |
-| --- | --- | --- |
-| \`{ "a": x }\`, \`[x, y]\` | \`{ a: x }\`, \`[x, y]\` | object & array constructors |
-| \`a.b.c\` | \`a.b.c\` | paths (root-relative names get the input prefix) |
-| \`items[price > 10]\` | \`items[price > 10]\` | predicate / filter |
-| \`items[0]\` | \`items[0]\` | index |
-| \`arr^(>a, b)\` | \`arr ^(>a, b)\` | [order-by](/operators/arrays#sort); \`>\` desc, \`<\`/bare asc |
-| \`a & b\` | \`(string(a) + string(b))\` | \`&\` → \`+\`, non-strings wrapped in \`string()\` |
-| \`a = b\`, \`a != b\` | \`a == b\`, \`a != b\` | comparisons |
-| \`a and b\`, \`a or b\` | \`a && b\`, \`a \\|\\| b\` | boolean logic |
-| \`c ? a : b\` | \`c ? a : b\` | ternary |
-| \`v in list\` | \`count(list[$ == v]) > 0\` | array membership |
-| \`+ - * / %\` | \`+ - * / %\` | arithmetic |
-| \`$uppercase(x)\`, \`$sum(x)\` | \`upper(x)\`, \`sum(x)\` | \`$\`-stdlib → same name, no \`$\` |
-| \`$filter(a, fn($x){ p })\` | \`a[p]\` | single-param lambda → [predicate](/operators/arrays#filter) |
-| \`$map(a, fn($x){ o })\` | \`(a) -> $x { o }\` | single-param lambda → [projection](/operators/projection) |
-| \`arr.{ ... }\` | \`(arr) -> { ... }\` | per-element object constructor |
-| \`arr.( $v := e; { ... } )\` | \`(arr) -> { let $v = e, ... }\` | per-element **block** → [\`let\`](/operators/bindings) bindings |
-| \`( $x := e; { ... } )\` | \`{ let $x = e, ... }\` | variable block returning an object |
-| \`( $x := e; scalar )\` | scalar with \`$x\` inlined | variable block returning a scalar |
-| \`arr[p]#$i.( ... )\` | \`arr[p] -> _, $i { ... }\` | positional [index binder](/operators/projection#index) |
-| \`$$\`, \`%\` | \`$root\`, \`$parent\` | root & parent context |
-| \`%.%\`, \`%.%.%\`, … | \`$parent.$parent…\` (or \`$root\`) | multi-level parent: a \`$parent\` chain, collapsed to \`$root\` when it reaches the input |
-| \`$notInStdlib(x)\` | \`fn notInStdlib(a0) = a0\` | unknown \`$fn\` → a stub \`fn\` mock + a note |
-
-## What doesn't
-
-The converter refuses these instead of emitting something subtly wrong — each comes back in \`errors\`, so the build fails loudly rather than shipping a bad mapping.
-
-| JSONata | Why | Do this instead |
-| --- | --- | --- |
-| \`$reduce\`, \`$sift\`, \`$each\`, \`$single\` | fold / iterate — no declarative form | an [\`fn\`](/functions/custom) or [\`use\`](/functions/custom#use) function |
-| \`( a; b )\` blocks of bare expressions | sequencing without \`:=\` bindings | restructure as [\`fn\`](/functions/custom) definitions |
-| \`@$v\` context binds | no equivalent scope | reshape with \`->\` / \`$parent\` explicitly |
-| \`#$i\` outside a projection | index needs a \`->\` to bind onto | move it onto the projection: \`arr#$i.( ... )\` |
-| wildcards \`*\` / \`**\` | untyped descent | name the paths explicitly |
-| \`$eval\`, \`$formatNumber\` pictures | dynamic / locale-formatting | intentionally out of scope |
-
-## Worked example
-
-${workedBody}
-
-**JSONata**
-
-\`\`\`
-${worked.jsonata}
-\`\`\`
-
-**Typeflow** (exactly what the converter emits)
-
-\`\`\`typeflow
-${worked.typeflow}
-\`\`\`
-
-Every row above and this whole example are **converted and type-checked by the real converter when these docs are built** — if a translation were wrong, the build would fail instead of shipping it.
-
-## Playground
-
-<JsonataPlayground />
-`;
-}
-
-// ---- migration/jq.md: every example is converted by the real jq converter
-// ---- at generation time, then compiled.
-
-function verifyJqMigrationExamples(): { jq: string; typeflow: string } {
-  for (const ex of JQ_MIGRATION_EXAMPLES) {
-    const converted = convertJq(ex.jq, { input: 'none' });
-    if (!converted.ok) {
-      throw new Error(
-        `jq migration example '${ex.title}' failed to convert: ${converted.errors.join('; ')}`,
-      );
-    }
-    const source = `input data: ${ex.inputType}\n\n${converted.typeflow.trim()}`;
-    const errors = compile(source).diagnostics.filter(
-      (d) => d.severity === 'error',
-    );
-    if (errors.length > 0) {
-      throw new Error(
-        `jq migration example '${ex.title}' does not compile: ${errors[0]!.message}`,
-      );
-    }
-  }
-
-  const worked = JQ_MIGRATION_EXAMPLES.find(
-    (e) => e.title === 'Putting it together',
-  );
-  if (!worked) {
-    throw new Error("Missing jq 'Putting it together' migration example.");
-  }
-  const workedSource = `input data: ${worked.inputType}\n\n${convertJq(
-    worked.jq,
-    {
-      input: 'none',
-    },
-  ).typeflow.trim()}`;
-  return {
-    jq: worked.jq,
-    typeflow: format(workedSource).formatted.trim(),
-  };
-}
-
-function renderJqMigrationPage(
-  locale: Locale,
-  worked: { jq: string; typeflow: string },
-): string {
-  const workedBody =
-    JQ_MIGRATION_EXAMPLES.find((e) => e.title === 'Putting it together')
-      ?.body ?? '';
-
-  const head = (title: string) => `---
-order: 2
-aside: false
-outline: false
-editLink: false
-lastUpdated: false
----
-
-${BANNER}
-
-<div class="tf-wide"></div>
-
-# ${title}`;
-
-  if (locale === 'fr') {
-    return `${head(FR_LABELS.migrationJqTitle)}
-
-${frJqMigrationBody(worked)}
-`;
-  }
-
-  return `${head('From jq')}
-
-Use this page when a jq filter is really a data mapping: object reshaping, path reads, array filters, projections, sorting, and simple function calls. The converter targets the declarative subset and rejects unsupported jq constructs instead of guessing.
-
-## What converts
-
-| jq | Typeflow | Notes |
-| --- | --- | --- |
-| \`{ a: .x }\`, \`[.x, .y]\` | \`{ a: data.x }\`, \`[data.x, data.y]\` | object & array constructors |
-| \`.a.b.c\` | \`data.a.b.c\` | root-relative paths get the input prefix |
-| \`.items[]\` | \`data.items\` | array iteration is represented as the array value |
-| \`.items[] \\| select(.price > 10)\` | \`data.items[price > 10]\` | jq \`select\` -> Typeflow filter |
-| \`.items[] \\| select(...) \\| .name\` | \`data.items[...].name\` | filter followed by field extraction |
-| \`.items \\| map({ id: .id })\` | \`data.items -> { id: id }\` | jq \`map\` -> projection |
-| \`.orders \\| sort_by(.total)\` | \`data.orders ^(total)\` | jq \`sort_by\` -> order-by |
-| \`.totals \\| add\` | \`sum(data.totals)\` | \`add\` maps to numeric sum |
-| \`length\`, \`tostring\`, \`tonumber\` | \`count(x)\`, \`string(x)\`, \`number(x)\` | jq filter functions become Typeflow function calls |
-| \`floor\`, \`ceil\`, \`round\`, \`sqrt\` | same names | numeric functions |
-| \`keys\`, \`reverse\`, \`unique\` | \`keys\`, \`reverse\`, \`distinct\` | object/array helpers |
-| \`join\`, \`split\`, \`contains\` | same names | string/array helpers |
-| \`== != < <= > >=\` | same operators | comparisons |
-| \`and\`, \`or\`, \`not\` | \`&&\`, \`\\|\\|\`, \`!\` | boolean logic |
-| \`+ - * / %\` | same operators | arithmetic |
-
-## What doesn't
-
-Unsupported jq features come back in \`errors\`, so generated docs and migrations fail loudly instead of shipping a bad mapping.
-
-| jq | Why | Do this instead |
-| --- | --- | --- |
-| \`reduce\`, \`foreach\`, recursive descent \`..\` | iterative / recursive control flow | a [\`fn\`](/functions/custom) or [\`use\`](/functions/custom#use) function |
-| \`as $x\`, variables, destructuring | no equivalent scope model yet | rewrite as a Typeflow \`let\` or projection |
-| update assignments \`|=\`, \`+=\`, \`del\` | mutation-oriented jq | express the desired output object directly |
-| optional paths \`.a?\` and \`try/catch\` | error-handling semantics differ | model optionality with Typeflow \`?.\` and \`??\` |
-| dynamic keys and string interpolation | dynamic output shape | keep output keys literal or use a custom function |
-| modules/imports | external jq runtime feature | use Typeflow [custom functions](/functions/custom) |
-
-## Worked example
-
-${workedBody}
-
-**jq**
-
-\`\`\`
-${worked.jq}
-\`\`\`
-
-**Typeflow** (exactly what the converter emits)
-
-\`\`\`typeflow
-${worked.typeflow}
-\`\`\`
-
-Every row above and this whole example are **converted and type-checked by the real jq converter when these docs are built**.
-
-## Playground
-
-<JqPlayground />
 `;
 }
 
@@ -766,11 +483,14 @@ ${sections.join('\n\n')}
 `;
 }
 
-// ---- benchmark scenarios: the /benchmark page claims "same output, four
-// ---- implementations" — prove it here, or fail the docs build. The jq
-// ---- filter runs on REAL jq (jq-wasm), the same engine the page uses.
+// ---- benchmark scenarios: verify the typeflow mapping compiles and matches
+// ---- the hand-written JS implementation the /benchmark page uses as the
+// ---- native-ceiling comparison. (jq/jsonata equivalence used to be checked
+// ---- here too via the converter; that verification moved out with the
+// ---- converter — the benchmark page's own jsonata/jq engines still run
+// ---- client-side and are unaffected.)
 
-async function verifyBenchScenarios(): Promise<void> {
+function verifyBenchScenarios(): void {
   for (const s of BENCH_SCENARIOS) {
     for (const n of [3, 25]) {
       const input = s.makeInput(n);
@@ -783,13 +503,9 @@ async function verifyBenchScenarios(): Promise<void> {
       }
       const tf = JSON.stringify(createMapping(res.compiled!)(input));
       const js = JSON.stringify((s.js as (i: unknown) => unknown)(input));
-      const jn = JSON.stringify(await jsonata(s.jsonata).evaluate(input));
-      const jq = JSON.stringify(
-        ((await jqJson(input as object, s.jq)) as unknown[])[0],
-      );
-      if (tf !== js || js !== jn || js !== jq) {
+      if (tf !== js) {
         throw new Error(
-          `Benchmark scenario '${s.id}' (n=${n}) is not equivalent across implementations:\n  typeflow: ${tf.slice(0, 120)}\n  js:       ${js.slice(0, 120)}\n  jsonata:  ${jn.slice(0, 120)}\n  jq:       ${jq.slice(0, 120)}`,
+          `Benchmark scenario '${s.id}' (n=${n}) is not equivalent across implementations:\n  typeflow: ${tf.slice(0, 120)}\n  js:       ${js.slice(0, 120)}`,
         );
       }
     }
@@ -799,16 +515,13 @@ async function verifyBenchScenarios(): Promise<void> {
 // ---- write everything, once per locale ----
 
 verifyDiagnosticsRegistry();
-await verifyBenchScenarios();
-const worked = verifyMigrationExamples();
-const workedJq = verifyJqMigrationExamples();
+verifyBenchScenarios();
 
 for (const locale of LOCALES) {
   const operatorsDir = docsDir(locale, 'operators');
   const functionsDir = docsDir(locale, 'functions');
-  const migrationDir = docsDir(locale, 'migration');
   const referenceDir = docsDir(locale, 'reference');
-  for (const dir of [operatorsDir, functionsDir, migrationDir, referenceDir]) {
+  for (const dir of [operatorsDir, functionsDir, referenceDir]) {
     rmSync(dir, { recursive: true, force: true });
     mkdirSync(dir, { recursive: true });
   }
@@ -838,16 +551,6 @@ for (const locale of LOCALES) {
     'utf8',
   );
   writeFileSync(
-    join(migrationDir, 'jsonata.md'),
-    renderJsonataMigrationPage(locale, worked),
-    'utf8',
-  );
-  writeFileSync(
-    join(migrationDir, 'jq.md'),
-    renderJqMigrationPage(locale, workedJq),
-    'utf8',
-  );
-  writeFileSync(
     join(referenceDir, 'diagnostics.md'),
     renderDiagnosticsPage(locale),
     'utf8',
@@ -859,5 +562,5 @@ const fnCount = BUILTIN_GROUPS.reduce(
   0,
 );
 console.log(
-  `✔ generated en + fr: ${DOC_PAGES.length} operator pages, ${BUILTIN_GROUPS.length} function groups (${fnCount} functions) + index + custom, migration (${MIGRATION_EXAMPLES.length + JQ_MIGRATION_EXAMPLES.length} verified examples), diagnostics (${DIAGNOSTICS.length} verified codes) — per locale`,
+  `✔ generated en + fr: ${DOC_PAGES.length} operator pages, ${BUILTIN_GROUPS.length} function groups (${fnCount} functions) + index + custom, diagnostics (${DIAGNOSTICS.length} verified codes) — per locale`,
 );
