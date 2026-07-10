@@ -8,7 +8,7 @@ on:
 
 defaults:
   run:
-    working-directory: jetbrains-plugin
+    working-directory: apps/jetbrains-plugin
 
 jobs:
   publish:
