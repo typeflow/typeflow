@@ -4,9 +4,9 @@ import {
   type Expr,
   type ObjectExpr,
   parentChainDepth,
-} from '../core';
-import { BUILTINS } from '../builtins';
-import { isNullish } from '../builtins/values';
+} from '#core';
+import { BUILTINS } from '#builtins';
+import { isNullish } from '#builtins/values';
 import { TypeflowRuntimeError } from './errors';
 
 const MAX_CALL_DEPTH = 128;

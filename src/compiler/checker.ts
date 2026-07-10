@@ -4,7 +4,7 @@ import {
   isBooleanish,
   isNumberish,
   isStringish,
-} from '../builtins';
+} from '#builtins';
 import {
   containsNullish,
   containsUndefined,
@@ -26,7 +26,7 @@ import {
   T,
   type Type,
   typeToString,
-} from '../core/index';
+} from '#core';
 
 interface Scope {
   vars: Map<string, Type>;
@@ -180,7 +180,11 @@ export class Checker {
         return T.literal(expr.value);
 
       case 'ident': {
-        const { type: t, res, landing } = this.resolveIdentRes(expr.name, scope);
+        const {
+          type: t,
+          res,
+          landing,
+        } = this.resolveIdentRes(expr.name, scope);
         if (t === undefined) {
           const suggestion = suggestName(expr.name, this.visibleNames(scope));
           this.error(

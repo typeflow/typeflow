@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'node:path';
-import { makeUnion, T, type Type } from '../core';
-import { type ResolveTypeRequest, type TypeResolver } from '../compiler';
+import { makeUnion, T, type Type } from '#core';
+import { type ResolveTypeRequest, type TypeResolver } from '#compiler';
 import { existsSync } from 'node:fs';
 import ts from 'typescript';
 

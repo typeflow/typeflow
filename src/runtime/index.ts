@@ -1,8 +1,9 @@
-import { type CompiledMapping } from '../core';
+import { type CompiledMapping } from '#core';
 import { compileMapping } from './compile';
 import { TypeflowRuntimeError } from './errors';
 
 export { TypeflowRuntimeError } from './errors';
+export { loadExternalFunctions } from './external';
 
 export type MappingFn = (input: unknown) => unknown;
 

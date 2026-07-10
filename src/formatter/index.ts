@@ -5,8 +5,8 @@ import {
   type ObjectExpr,
   type Span,
   type TypeNode,
-} from '../core';
-import { parse, type Token, tokenize } from '../parser';
+} from '#core';
+import { parse, type Token, tokenize } from '#parser';
 
 export interface FormatResult {
   ok: boolean;

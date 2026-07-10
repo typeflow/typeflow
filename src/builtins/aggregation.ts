@@ -1,6 +1,6 @@
 import { type Builtin, type BuiltinGroup, pNumArr } from './types';
 import { numArr } from './values';
-import { T } from '../core';
+import { T } from '#core';
 
 const functions: Record<string, Builtin> = {
   sum: {

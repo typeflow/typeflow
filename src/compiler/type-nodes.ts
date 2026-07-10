@@ -1,5 +1,5 @@
 /** Conversion of inline type syntax (TypeNode AST) into the semantic type model. */
-import { makeUnion, T, type Type, type TypeNode } from '../core';
+import { makeUnion, T, type Type, type TypeNode } from '#core';
 
 export function typeFromNode(node: TypeNode): Type {
   switch (node.kind) {

@@ -8,7 +8,7 @@ import {
   pObj,
   pStr,
 } from './types';
-import { makeUnion, T } from '../core';
+import { makeUnion, T } from '#core';
 
 const functions: Record<string, Builtin> = {
   keys: {

@@ -1,4 +1,4 @@
-import { makeUnion, T, type Type } from '../core';
+import { makeUnion, T, type Type } from '#core';
 
 export interface BuiltinParam {
   label: string;

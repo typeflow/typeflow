@@ -8,7 +8,7 @@ import {
   pStrOpt,
 } from './types';
 import { num, str } from './values';
-import { T } from '../core';
+import { T } from '#core';
 
 const functions: Record<string, Builtin> = {
   // ---- Conversion ----

@@ -1,4 +1,4 @@
-import { type Builtin, BUILTINS } from '../builtins';
+import { type Builtin, BUILTINS } from '#builtins';
 import {
   builtinFrom,
   collectCallNames,
@@ -16,9 +16,9 @@ import {
   type Type,
   typeSatisfies,
   typeToString,
-} from '../core';
+} from '#core';
 import { Checker } from './checker';
-import { parse } from '../parser';
+import { parse } from '#parser';
 import { typeFromNode } from './type-nodes';
 
 export {
@@ -27,7 +27,7 @@ export {
   type Builtin,
   type BuiltinGroup,
   type BuiltinParam,
-} from '../builtins';
+} from '#builtins';
 export {
   defineFunction,
   type DefineFunctionOptions,

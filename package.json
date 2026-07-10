@@ -27,6 +27,16 @@
   ],
   "type": "module",
   "types": "./dist/types/index.d.ts",
+  "imports": {
+    "#core": "./src/core/index.ts",
+    "#compiler": "./src/compiler/index.ts",
+    "#builtins": "./src/builtins/index.ts",
+    "#builtins/values": "./src/builtins/values.ts",
+    "#parser": "./src/parser/index.ts",
+    "#runtime": "./src/runtime/index.ts",
+    "#adapter": "./src/adapter/index.ts",
+    "#formatter": "./src/formatter/index.ts"
+  },
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",

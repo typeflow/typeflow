@@ -1,6 +1,6 @@
 import { type Builtin, type BuiltinGroup, pAny } from './types';
 import { effectiveBoolean } from './values';
-import { T } from '../core';
+import { T } from '#core';
 
 const functions: Record<string, Builtin> = {
   boolean: {

@@ -1,6 +1,6 @@
 /** `.d.typeflow.ts` declaration emission. */
 import { type CompileResult } from './index';
-import { typeToString } from '../core';
+import { typeToString } from '#core';
 
 export interface EmitDtsOptions {
   sourceFileName?: string;

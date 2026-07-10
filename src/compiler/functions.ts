@@ -11,9 +11,9 @@ import {
   typeSatisfies,
   typeToString,
   type UseParam,
-} from '../core';
-import { type Builtin } from '../builtins';
-import { parseFunctionSignature } from '../parser';
+} from '#core';
+import { type Builtin } from '#builtins';
+import { parseFunctionSignature } from '#parser';
 import { typeFromNode } from './type-nodes';
 
 export interface TypeflowFunction {

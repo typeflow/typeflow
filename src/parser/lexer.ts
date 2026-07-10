@@ -1,4 +1,4 @@
-import { type Diagnostic } from '../core';
+import { type Diagnostic } from '#core';
 
 export type TokenType =
   | 'ident'

@@ -6,7 +6,7 @@ import {
   pNumOpt,
 } from './types';
 import { num, roundHalfEven } from './values';
-import { T } from '../core';
+import { T } from '#core';
 
 const functions: Record<string, Builtin> = {
   // ---- Conversion ----

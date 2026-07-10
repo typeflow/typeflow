@@ -14,7 +14,7 @@ import {
   type TypeNode,
   type UseDecl,
   type UseParam,
-} from '../core';
+} from '#core';
 import { LexError, type Token, tokenize } from './lexer';
 
 export interface ParseResult {
