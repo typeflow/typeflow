@@ -52,7 +52,7 @@ is a Typeflow code issue, both are fixed in the committed config:
 2. **K2 compiler internal crash on `TypeflowExternalAnnotator`**: with
    2.0.21, analyzing the class overriding `ExternalAnnotator<PsiFile, List<TypeflowDiagnostic>>`
    threw `FileAnalysisException: ... IllegalArgumentException: source must
-   not be null` — a known class of early-K2 bugs analyzing overrides against
+not be null` — a known class of early-K2 bugs analyzing overrides against
    Java-interop platform generics. Also resolved by the 2.1.20 bump.
 
 Both confirmed by a real `./gradlew build` in this environment (not just

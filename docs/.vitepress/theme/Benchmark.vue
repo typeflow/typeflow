@@ -51,8 +51,7 @@ const ui = computed(() =>
         },
         mismatch:
           'The four implementations disagree on the output — benchmark aborted.',
-        failed:
-          'An engine failed to load or run — see the browser console.',
+        failed: 'An engine failed to load or run — see the browser console.',
         verified: 'identical outputs verified before measuring ✔',
       },
 );

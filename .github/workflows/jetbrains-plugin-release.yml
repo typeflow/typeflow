@@ -3,7 +3,7 @@ name: Publish JetBrains plugin
 on:
   push:
     tags:
-      - "jetbrains-v*"
+      - 'jetbrains-v*'
   workflow_dispatch:
 
 defaults:
@@ -14,17 +14,13 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      -
-        uses: actions/checkout@v6
-      -
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
-      -
-        uses: gradle/actions/setup-gradle@v4
-      -
-        name: Verify tag matches plugin version
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Verify tag matches plugin version
         if: github.event_name == 'push'
         run: |
           tag_version="${GITHUB_REF_NAME#jetbrains-v}"
@@ -33,18 +29,15 @@ jobs:
             echo "Tag jetbrains-v$tag_version does not match build.gradle.kts version $plugin_version"
             exit 1
           fi
-      -
-        run: ./gradlew build
-      -
-        name: Sign plugin
+      - run: ./gradlew build
+      - name: Sign plugin
         if: ${{ secrets.JETBRAINS_PRIVATE_KEY != '' }}
         run: ./gradlew signPlugin
         env:
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
           PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
           PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
-      -
-        name: Publish to JetBrains Marketplace
+      - name: Publish to JetBrains Marketplace
         run: ./gradlew publishPlugin
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
