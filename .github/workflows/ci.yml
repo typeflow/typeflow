@@ -2,26 +2,36 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      -
-        uses: actions/checkout@v6
-      -
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      -
-        run: bun install --frozen-lockfile
-      -
+      - run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile --cwd apps/cli
+      - run: bun install --frozen-lockfile --cwd apps/vscode-plugin
+      - # build (root lib + apps/cli bin) + lint + format:check + bun test
         run: bun run check
-      -
-        run: bun run typecheck
-      -
-        run: bun src/cli/main.ts check "examples/**/*.typeflow"
-      -
-        run: bun src/cli/main.ts types "examples/**/*.typeflow" --check
+      - run: bun run typecheck
+      - run: bun apps/cli/src/main.ts check "examples/**/*.typeflow"
+      - run: bun apps/cli/src/main.ts types "examples/**/*.typeflow" --check
+      - run: bun run --cwd apps/vscode-plugin typecheck
+      - run: bun run --cwd apps/vscode-plugin build
+
+  converters:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/converters
+      - run: cargo fmt --check
+        working-directory: apps/converters
+      - run: cargo test
+        working-directory: apps/converters
