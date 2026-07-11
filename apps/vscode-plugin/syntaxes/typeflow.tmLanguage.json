@@ -1,0 +1,102 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Typeflow",
+  "scopeName": "source.typeflow",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#property" },
+    { "include": "#keywords" },
+    { "include": "#literals" },
+    { "include": "#types" },
+    { "include": "#function-call" },
+    { "include": "#special-variables" },
+    { "include": "#operators" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.number-sign.typeflow", "match": "#.*$" },
+        { "name": "comment.line.double-slash.typeflow", "match": "//.*$" }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.typeflow",
+          "begin": "\"",
+          "end": "\"|(?=$)",
+          "patterns": [
+            {
+              "name": "constant.character.escape.typeflow",
+              "match": "\\\\[ntr\\\\\"']"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.typeflow",
+          "begin": "'",
+          "end": "'|(?=$)",
+          "patterns": [
+            {
+              "name": "constant.character.escape.typeflow",
+              "match": "\\\\[ntr\\\\\"']"
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b",
+      "name": "constant.numeric.typeflow"
+    },
+    "property": {
+      "patterns": [
+        {
+          "match": "(?<=[{,])\\s*([A-Za-z_$][\\w$]*)\\s*(\\?)?(?=\\s*:)",
+          "captures": {
+            "1": { "name": "support.type.property-name.typeflow" },
+            "2": { "name": "keyword.operator.optional.typeflow" }
+          }
+        },
+        {
+          "match": "^\\s*([A-Za-z_$][\\w$]*)\\s*(\\?)?(?=\\s*:)",
+          "captures": {
+            "1": { "name": "support.type.property-name.typeflow" },
+            "2": { "name": "keyword.operator.optional.typeflow" }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "match": "\\b(input|use|fn|map|from|let)\\b",
+      "name": "keyword.control.typeflow"
+    },
+    "literals": {
+      "match": "\\b(true|false|null)\\b",
+      "name": "constant.language.typeflow"
+    },
+    "types": {
+      "match": "\\b(string|number|boolean|unknown)\\b",
+      "name": "support.type.primitive.typeflow"
+    },
+    "function-call": {
+      "match": "\\b([A-Za-z_$][\\w$]*)(?=\\s*\\()",
+      "name": "entity.name.function.typeflow"
+    },
+    "special-variables": {
+      "match": "\\$root\\b|\\$parent\\b|\\$(?![\\w$])",
+      "name": "variable.language.typeflow"
+    },
+    "operators": {
+      "match": "\\?\\.|\\?\\?|->|==|!=|<=|>=|&&|\\|\\||[.?|!+\\-*/%<>=^]",
+      "name": "keyword.operator.typeflow"
+    },
+    "punctuation": {
+      "match": "[{}\\[\\](),:]",
+      "name": "punctuation.typeflow"
+    }
+  }
+}

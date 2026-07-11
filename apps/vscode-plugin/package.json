@@ -1,0 +1,67 @@
+{
+  "name": "typeflow",
+  "displayName": "Typeflow",
+  "version": "0.0.1",
+  "description": "Syntax highlighting, inline diagnostics and completion for .typeflow mapping files",
+  "categories": [
+    "Linters",
+    "Programming Languages"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasfarineau/typeflow"
+  },
+  "publisher": "thomasfarineau",
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build": "bun scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "package": "bun scripts/build.ts && bun x @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.5.0"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "typeflow",
+        "aliases": [
+          "Typeflow"
+        ],
+        "extensions": [
+          ".typeflow"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/typeflow.svg",
+          "dark": "./icons/typeflow.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "typeflow",
+        "scopeName": "source.typeflow",
+        "path": "./syntaxes/typeflow.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "Typeflow",
+      "properties": {
+        "typeflow.path": {
+          "type": "string",
+          "default": "typeflow",
+          "description": "Command used to run the Typeflow CLI (resolved against PATH, or an absolute path)."
+        }
+      }
+    }
+  },
+  "activationEvents": [
+    "onLanguage:typeflow"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
+  }
+}
