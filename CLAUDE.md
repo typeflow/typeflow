@@ -1,3 +1,9 @@
+## Git commits
+
+- Never add a `Co-Authored-By` trailer (or any other AI-attribution line) to commit messages. Thomas Farineau is the sole author.
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): subject`, imperative mood, lowercase subject, no trailing period. Scope is optional but preferred when the change is localized (e.g. `feat(cli): ...`, `fix(converter): ...`). Common types: `feat`, `fix`, `refactor`, `perf`, `chore`, `docs`, `test`, `style`.
+- Never bypass git hooks (`--no-verify`) or skip commit signing to force a commit through — fix the underlying issue instead, unless explicitly told otherwise.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
