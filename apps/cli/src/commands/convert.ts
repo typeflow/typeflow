@@ -1,9 +1,4 @@
 /** `convert` — translate jq/JSONata files into Typeflow mappings. */
-import {
-  convertJqBatch,
-  convertJsonataBatch,
-  type ConvertResult,
-} from '@typeflow/converters';
 import { readFile, writeFile } from 'node:fs/promises';
 import { expandFilesByExtension } from '#glob';
 import { relative } from 'node:path';
@@ -17,14 +12,6 @@ const EXTENSION: Record<ConvertType, string> = {
   jsonata: '.jsonata',
 };
 
-const CONVERT_BATCH: Record<
-  ConvertType,
-  (sources: string[]) => ConvertResult[]
-> = {
-  jq: convertJqBatch,
-  jsonata: convertJsonataBatch,
-};
-
 export async function cmdConvert(
   patterns: string[],
   type: ConvertType,
@@ -36,6 +23,17 @@ export async function cmdConvert(
     process.exit(1);
   }
 
+  // Imported lazily: @typeflow/converters loads a native Rust addon at import
+  // time and throws when no prebuilt .node exists for the platform — that
+  // must only gate `convert`, not every other CLI command.
+  let converters: typeof import('@typeflow/converters');
+  try {
+    converters = await import('@typeflow/converters');
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e));
+    process.exit(1);
+  }
+
   // One native call converts the whole batch in parallel across CPU cores
   // (Rust/rayon) — looping and calling the single-file converter per file
   // would pay an FFI round-trip per file and run single-threaded, defeating
@@ -43,7 +41,10 @@ export async function cmdConvert(
   const sources = await Promise.all(
     files.map((file) => readFile(file, 'utf8')),
   );
-  const results = CONVERT_BATCH[type](sources);
+  const results =
+    type === 'jq'
+      ? converters.convertJqBatch(sources)
+      : converters.convertJsonataBatch(sources);
 
   let converted = 0;
   let failed = 0;
