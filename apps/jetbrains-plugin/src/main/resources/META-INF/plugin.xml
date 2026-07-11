@@ -23,6 +23,9 @@
         <lang.syntaxHighlighterFactory
             language="Typeflow"
             implementationClass="fr.thomasfarineau.typeflow.idea.TypeflowSyntaxHighlighterFactory"/>
+        <lang.parserDefinition
+            language="Typeflow"
+            implementationClass="fr.thomasfarineau.typeflow.idea.TypeflowParserDefinition"/>
         <colorSettingsPage implementation="fr.thomasfarineau.typeflow.idea.TypeflowColorSettingsPage"/>
         <externalAnnotator
             language="Typeflow"
