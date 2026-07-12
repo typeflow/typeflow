@@ -46,15 +46,10 @@ features:
     link: /fr/functions/custom
     linkText: Fonctions personnalisées
   - icon: 🔁
-    title: Vous venez de JSONata ?
-    details: Le convertisseur réécrit chemins, prédicats, lambdas et la stdlib $ en Typeflow typé — et dit exactement ce qu'il n'a pas pu convertir.
-    link: /fr/migration/jsonata
-    linkText: Migrer un mapping
-  - icon: 🧰
-    title: Vous venez de jq ?
-    details: Convertissez des filtres jq déclaratifs — chemins, select, map, sort_by et fonctions courantes — en mappings Typeflow typés.
-    link: /fr/migration/jq
-    linkText: Migrer un filtre jq
+    title: Vous venez de JSONata ou jq ?
+    details: typeflow convert réécrit chemins, prédicats, lambdas et la stdlib en Typeflow typé — en parallèle sur tous les fichiers — et dit exactement ce qu'il n'a pas pu convertir.
+    link: /fr/guide/cli
+    linkText: La commande convert
 ---
 
 <div class="home-section">

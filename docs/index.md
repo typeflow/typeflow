@@ -46,15 +46,10 @@ features:
     link: /functions/custom
     linkText: Custom functions
   - icon: 🔁
-    title: Coming from JSONata?
-    details: The converter rewrites paths, predicates, lambdas and the $-stdlib to typed Typeflow — and tells you exactly what it couldn't convert.
-    link: /migration/jsonata
-    linkText: Migrate a mapping
-  - icon: 🧰
-    title: Coming from jq?
-    details: Convert declarative jq filters — paths, select, map, sort_by and common functions — into typed Typeflow mappings.
-    link: /migration/jq
-    linkText: Migrate a jq filter
+    title: Coming from JSONata or jq?
+    details: typeflow convert rewrites paths, predicates, lambdas and the stdlib to typed Typeflow — in parallel across files — and tells you exactly what it couldn't convert.
+    link: /guide/cli
+    linkText: The convert command
 ---
 
 <div class="home-section">

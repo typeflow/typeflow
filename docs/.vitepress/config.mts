@@ -1,6 +1,13 @@
-import { type Builtin, BUILTIN_GROUPS } from '../../src/builtins/index';
+// Value imports from the library go through the package name: Vite's config
+// bundler externalizes them, and Node then resolves the export map to the
+// built dist/index.js (docs:dev / docs:build run `bun scripts/build.ts`
+// first). Importing ../../src here instead would make Node load the raw
+// TypeScript sources at config time, where the runtime `#core`-style subpath
+// imports and extensionless relative imports don't resolve.
 import { type DefaultTheme, defineConfig } from 'vitepress';
 import { readdirSync, readFileSync } from 'node:fs';
+import { type Builtin } from '../../src/builtins/types';
+import { BUILTIN_GROUPS } from 'typeflow-js';
 import container from 'markdown-it-container';
 import { DOC_PAGES } from '../../scripts/doc-pages';
 import { fileURLToPath } from 'node:url';
@@ -222,8 +229,6 @@ export default defineConfig({
               { text: 'Opérateurs', link: '/fr/operators/literals' },
               { text: 'Fonctions', link: '/fr/functions/' },
               { text: 'Diagnostics', link: '/fr/reference/diagnostics' },
-              { text: 'Depuis JSONata', link: '/fr/migration/jsonata' },
-              { text: 'Depuis jq', link: '/fr/migration/jq' },
             ],
           },
           { text: 'Playground', link: '/fr/playground' },
@@ -249,10 +254,6 @@ export default defineConfig({
           {
             text: 'Référence',
             items: generatedSidebar('reference', 'fr'),
-          },
-          {
-            text: 'Migration',
-            items: generatedSidebar('migration', 'fr'),
           },
           {
             text: 'Playground',
@@ -324,8 +325,6 @@ export default defineConfig({
           { text: 'Operators', link: '/operators/literals' },
           { text: 'Functions', link: '/functions/' },
           { text: 'Diagnostics', link: '/reference/diagnostics' },
-          { text: 'From JSONata', link: '/migration/jsonata' },
-          { text: 'From jq', link: '/migration/jq' },
         ],
       },
       { text: 'Playground', link: '/playground' },
@@ -351,10 +350,6 @@ export default defineConfig({
       {
         text: 'Reference',
         items: generatedSidebar('reference'),
-      },
-      {
-        text: 'Migration',
-        items: generatedSidebar('migration'),
       },
       {
         text: 'Playground',
@@ -388,7 +383,6 @@ export default defineConfig({
         '@thomasfarineau/typeflow-formatter': pkg('formatter'),
         '@thomasfarineau/typeflow-compiler': pkg('compiler'),
         '@thomasfarineau/typeflow-runtime': pkg('runtime'),
-        '@thomasfarineau/typeflow-converter': pkg('converter'),
       },
     },
     ssr: {
