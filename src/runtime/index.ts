@@ -2,8 +2,11 @@ import { type CompiledMapping } from '#core';
 import { compileMapping } from './compile';
 import { TypeflowRuntimeError } from './errors';
 
+// NOTE: ./external is deliberately NOT re-exported here — it imports
+// node:fs/node:path, and this barrel is the browser-safe runtime surface
+// (the docs playground bundles it). Node consumers get loadExternalFunctions
+// from the package root (src/index.ts).
 export { TypeflowRuntimeError } from './errors';
-export { loadExternalFunctions } from './external';
 
 export type MappingFn = (input: unknown) => unknown;
 

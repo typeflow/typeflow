@@ -1,12 +1,9 @@
 import { compile, type CompileResult, type TypeflowFunction } from '#compiler';
-import {
-  createMapping,
-  loadExternalFunctions,
-  type MappingFn,
-} from './runtime/index';
+import { createMapping, type MappingFn } from './runtime/index';
 import { relative, resolve } from 'node:path';
 import { createTypeScriptResolver } from '#adapter';
 import { formatDiagnostic } from '#core';
+import { loadExternalFunctions } from './runtime/external';
 import { readFile } from 'node:fs/promises';
 
 export * from './core/index';
@@ -28,7 +25,6 @@ export type {
 } from './compiler/index';
 export {
   createMapping,
-  loadExternalFunctions,
   runMapping,
   TypeflowRuntimeError,
   type CreateMappingOptions,
@@ -36,6 +32,7 @@ export {
   type MappingFn,
   type NamedFunction,
 } from './runtime/index';
+export { loadExternalFunctions } from './runtime/external';
 export {
   createTypeScriptResolver,
   resolveTypeScriptType,
