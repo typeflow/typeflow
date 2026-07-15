@@ -1,0 +1,20 @@
+{
+  "name": "@typeflow/converters-darwin-x64",
+  "version": "0.0.1",
+  "description": "Typeflow converters (jq / JSONata to Typeflow) as a native Node.js addon, written in Rust",
+  "license": "MIT",
+  "author": "Thomas Farineau",
+  "files": [
+    "typeflow-converters.darwin-x64.node"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "typeflow-converters.darwin-x64.node",
+  "engines": {
+    "node": ">= 18"
+  }
+}

@@ -57,13 +57,58 @@ interface NativeModule {
   typeFromSample(sampleJson: string): string;
 }
 
+// Node only exposes glibc version info on glibc systems; its absence on
+// Linux means musl (e.g. Alpine) — the standard napi-rs detection approach.
+function isMusl(): boolean {
+  const report = process.report?.getReport?.() as
+    | { header?: { glibcVersionRuntime?: string } }
+    | undefined;
+  return !report?.header?.glibcVersionRuntime;
+}
+
+// Matches the ABI suffix `napi build --platform` bakes into generated .node
+// filenames (e.g. `typeflow-converters.win32-x64-msvc.node`).
+function abiSuffix(): string {
+  if (process.platform === 'win32') return '-msvc';
+  if (process.platform === 'linux') return isMusl() ? '-musl' : '-gnu';
+  return '';
+}
+
+// The npm package a real install's `optionalDependencies` resolution would
+// have placed on disk for this platform (see apps/converters/package.json).
+function platformPackageName(): string | undefined {
+  const { platform, arch } = process;
+  if (platform === 'win32' && arch === 'x64')
+    return '@typeflow/converters-win32-x64-msvc';
+  if (platform === 'darwin' && arch === 'x64')
+    return '@typeflow/converters-darwin-x64';
+  if (platform === 'darwin' && arch === 'arm64')
+    return '@typeflow/converters-darwin-arm64';
+  if (platform === 'linux' && arch === 'x64' && !isMusl())
+    return '@typeflow/converters-linux-x64-gnu';
+  return undefined;
+}
+
 function loadNative(): NativeModule {
   const requireNative = createRequire(import.meta.url);
+
+  // Real npm install path: the matching platform package was pulled in via
+  // optionalDependencies.
+  const packageName = platformPackageName();
+  if (packageName) {
+    try {
+      return requireNative(packageName) as NativeModule;
+    } catch {
+      // Not installed — fall through to the local dev build below.
+    }
+  }
+
+  // Local dev path: `bun run build` compiled a single-platform addon
+  // straight into the package root (or dist/, once bundled).
   const here = dirname(fileURLToPath(import.meta.url));
-  // Source layout runs from the package root; the built file lives in dist/.
   const roots = [here, join(here, '..')];
   const names = [
-    `typeflow-converters.${process.platform}-${process.arch}.node`,
+    `typeflow-converters.${process.platform}-${process.arch}${abiSuffix()}.node`,
     'converter.node',
   ];
   for (const root of roots) {

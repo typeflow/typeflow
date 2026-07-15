@@ -1,41 +1,45 @@
 /**
- * Build for npm: cargo builds the Rust addon (release, LTO), the artifact is
- * copied next to the package root under its platform name, then `Bun.build`
- * bundles index.ts into dist/ in BOTH module formats — ESM (`.js`) and
- * CommonJS (`.cjs`) — like the main typeflow package. Run with: bun run build
+ * Build for npm: `napi build` (via @napi-rs/cli) builds the Rust addon for
+ * the host target and writes it next to the package root with the
+ * ABI-suffixed platform name apps/converters/index.ts's loader expects
+ * (e.g. `typeflow-converters.win32-x64-msvc.node`). napi also insists on
+ * generating its own raw-binding `.d.ts`/JS loader alongside it — redirected
+ * to throwaway filenames and deleted, since index.ts (hand-maintained, with
+ * a friendlier wrapped API) is this package's real entry point and its own
+ * index.d.ts must NOT be clobbered by napi's raw native-binding types. Cross
+ * target builds (used by the release CI matrix) pass `--target <triple>`
+ * directly to `napi build`, bypassing this script. Then `Bun.build` bundles
+ * index.ts into dist/ in BOTH module formats — ESM (`.js`) and CommonJS
+ * (`.cjs`) — like the main typeflow package. Run with: bun run build
  */
-import { copyFileSync, existsSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+import { rmSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
-const cargo = Bun.spawnSync(['cargo', 'build', '--release'], {
-  cwd: root,
-  stdout: 'inherit',
-  stderr: 'inherit',
-});
-if (cargo.exitCode !== 0) {
-  console.error('✖ cargo build failed');
-  process.exit(1);
-}
-
-const artifacts: Partial<Record<NodeJS.Platform, string>> = {
-  win32: 'typeflow_converters.dll',
-  darwin: 'libtypeflow_converters.dylib',
-  linux: 'libtypeflow_converters.so',
-};
-const artifact = join(root, 'target', 'release', artifacts[process.platform]!);
-if (!existsSync(artifact)) {
-  console.error(`✖ build artifact not found: ${artifact}`);
-  process.exit(1);
-}
-const nodeFile = join(
-  root,
-  `typeflow-converters.${process.platform}-${process.arch}.node`,
+const rawDts = join(root, 'native-bindings.d.ts');
+const rawJs = join(root, 'native-bindings.js');
+const napi = Bun.spawnSync(
+  [
+    'bunx',
+    'napi',
+    'build',
+    '--platform',
+    '--release',
+    '--dts',
+    'native-bindings.d.ts',
+    '--js',
+    'native-bindings.js',
+  ],
+  { cwd: root, stdout: 'inherit', stderr: 'inherit' },
 );
-copyFileSync(artifact, nodeFile);
-console.log(`✔ addon built: ${nodeFile}`);
+rmSync(rawDts, { force: true });
+rmSync(rawJs, { force: true });
+if (napi.exitCode !== 0) {
+  console.error('✖ napi build failed');
+  process.exit(1);
+}
 
 rmSync(join(root, 'dist'), { recursive: true, force: true });
 
