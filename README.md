@@ -72,13 +72,15 @@ $ typeflow infer user.typeflow
 ## Quick start
 
 ```console
-$ bun add -d typeflow-js
-$ bunx typeflow init                 # scaffold an example mapping
-$ bunx typeflow check                # tsc-style diagnostics
-$ bunx typeflow infer user.typeflow  # print the inferred output type
-$ bunx typeflow types                # generate .d.typeflow.ts declarations
+$ bun add -d @typeflow/cli                                # the `typeflow` binary
+$ bunx typeflow init                                       # scaffold an example mapping
+$ bunx typeflow check                                       # tsc-style diagnostics
+$ bunx typeflow infer user.typeflow                         # print the inferred output type
+$ bunx typeflow types                                       # generate .d.typeflow.ts declarations
 $ bunx typeflow run user.typeflow --input data.json
-$ bunx typeflow watch                # re-check + regenerate on change
+$ bunx typeflow watch                                       # re-check + regenerate on change
+$ bunx typeflow fmt                                          # rewrite mappings in canonical form
+$ bunx typeflow convert mapping.jsonata --type jsonata      # migrate from jq/JSONata, in parallel across files
 ```
 
 Enable typed imports in `tsconfig.json`:
@@ -89,12 +91,40 @@ Enable typed imports in `tsconfig.json`:
 
 ### Programmatic API
 
+Only using it from code? Skip the CLI package — `typeflow-js` alone is enough:
+
+```console
+$ bun add -d typeflow-js
+```
+
 ```ts
 import { loadTypeflowMapping } from 'typeflow-js';
 
 const mapUser = await loadTypeflowMapping('./user.typeflow');
 const view = mapUser(apiResponse);
 ```
+
+### Direct imports
+
+With `@typeflow/plugin`, skip even that — import the mapping file itself
+(`node --import @typeflow/plugin/register`, or `preload =
+["@typeflow/plugin/bun"]` in bunfig.toml; `require()` works too):
+
+```ts
+import mapUser from './user.typeflow'; // typed via the .d.typeflow.ts sidecar
+
+const view = mapUser(apiResponse);
+```
+
+## IDE support
+
+Syntax highlighting, inline diagnostics, and completion on `input`-bound
+fields — for VS Code (`apps/vscode-plugin`) and JetBrains IDEs
+(`apps/jetbrains-plugin`, IntelliJ/WebStorm/…). Both shell out to the
+`typeflow` CLI rather than bundling the compiler, so they always match
+whatever version is installed in your project. Build from source until
+they're on their respective marketplaces (each has a `README.md` with build
+steps).
 
 ## The language (v0.1)
 
@@ -128,31 +158,50 @@ Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"
 
 ## Monorepo layout
 
-| Package                                       | Responsibility                                                |
-| --------------------------------------------- | ------------------------------------------------------------- |
-| `@thomasfarineau/typeflow`                    | Umbrella: compiler + runtime + adapters, one install          |
-| `@thomasfarineau/typeflow-core`               | Type model, AST/IR, diagnostics. Zero dependencies            |
-| `@thomasfarineau/typeflow-parser`             | Lexer + recursive-descent parser                              |
-| `@thomasfarineau/typeflow-compiler`           | Binding, semantic analysis, type inference, `.d.ts` emission  |
-| `@thomasfarineau/typeflow-runtime`            | Deterministic IR interpreter. Zero dependencies, browser-safe |
-| `@thomasfarineau/typeflow-adapter-typescript` | `input x: T from "./mod"` via the TS compiler API             |
-| `@thomasfarineau/typeflow-cli`                | `check` / `infer` / `types` / `run` / `watch` / `init`        |
+| Package                                    | Responsibility                                                                        |
+| ------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `typeflow-js` (root)                       | Compiler, type checker, runtime, TS adapter, formatter. Zero deps                     |
+| `@typeflow/cli` (`apps/cli`)               | `check` / `infer` / `types` / `run` / `watch` / `init` / `fmt` / `convert`            |
+| `@typeflow/converters` (`apps/converters`) | jq/JSONata → Typeflow, native Rust (napi-rs), parallel batch conversion               |
+| `@typeflow/plugin` (`apps/plugin`)         | `import`/`require` `.typeflow` files directly — Node ESM loader, CJS hook, Bun plugin |
+| VS Code extension (`apps/vscode-plugin`)   | Syntax highlighting, diagnostics, completion                                          |
+| JetBrains plugin (`apps/jetbrains-plugin`) | Syntax highlighting, diagnostics, completion                                          |
+| `apps/benchmarks`                          | Runtime benchmarks vs jq/JSONata (private, powers the docs `/benchmark` page)         |
+
+Each `apps/*` package has its own `package.json`; see its `README.md` for
+build steps and why it isn't a declared Bun workspace member.
 
 ## Development
 
 ```console
-$ bun install
-$ bun test            # 38 tests across parser, compiler, runtime, adapter, e2e
-$ bun run typecheck   # generate example declarations + tsc --noEmit
-$ bun run demo        # compile + run examples/api-response
-$ bun run docs:dev    # docs + playground (VitePress)
+$ bun install                    # root deps; also links typeflow-js and
+                                  # @typeflow/converters into node_modules for
+                                  # apps/cli (see scripts/link-local-deps.ts)
+$ bun test                       # 133 tests across parser, compiler, runtime, adapter, e2e
+$ bun run typecheck              # generate example declarations + tsc --noEmit
+$ bun run demo                   # compile + run examples/api-response
+$ bun run docs:dev               # docs + playground (VitePress)
 ```
+
+`apps/cli`, `apps/converters`, `apps/vscode-plugin` and `apps/benchmarks` each
+need their own first-time install (Bun workspaces aren't used — see
+`scripts/link-local-deps.ts`):
+
+```console
+$ bun install --cwd apps/cli
+$ bun install --cwd apps/plugin
+$ bun install --cwd apps/vscode-plugin
+$ bun install --cwd apps/benchmarks
+$ cd apps/converters && bun run build   # Rust toolchain required; cargo test runs its unit tests
+```
+
+`apps/jetbrains-plugin` is Gradle/Kotlin — see its `README.md`.
 
 ## Roadmap
 
-- **v0.1 (this)** — core language, TS adapter, inference, `.d.typeflow.ts` emission, CLI.
-- **v0.5** — language server + VS Code extension, Zod/JSON Schema adapters, fragments, `match` on discriminated unions, fixtures, formatter, contract mode (declared output).
-- **v1.0** — frozen grammar + conformance suite, OpenAPI adapter, execution limits, Vite plugin, docs site with playground.
+- **v0.1 (this)** — core language, TS adapter, inference, `.d.typeflow.ts` emission, CLI, formatter, jq/JSONata converter, VS Code + JetBrains support.
+- **v0.5** — language server (real diagnostics/completion instead of shelling out to the CLI), Zod/JSON Schema adapters, fragments, `match` on discriminated unions, fixtures, contract mode (declared output).
+- **v1.0** — frozen grammar + conformance suite, OpenAPI adapter, execution limits, Vite plugin.
 
 Pre-1.0, syntax and APIs are **unstable** by design.
 
