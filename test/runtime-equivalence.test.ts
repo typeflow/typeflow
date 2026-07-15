@@ -11,7 +11,7 @@ import {
 } from '../src/compiler/index';
 import { describe, expect, test } from 'bun:test';
 import { type Env, evalExpr } from '../src/runtime/interpreter';
-import { BENCH_SCENARIOS } from '../scripts/bench/scenarios';
+import { BENCH_SCENARIOS } from '../scripts/bench-scenarios';
 import { createMapping } from '../src/runtime/index';
 
 function both(

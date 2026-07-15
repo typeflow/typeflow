@@ -1,13 +1,14 @@
 /**
- * Publishes benchmarks/<date>/ reports into the docs site.
+ * Publishes results/<date>/ reports into the docs site.
  *
- * Copies every benchmarks/<YYYY-MM-DD>/ directory (result.md renamed to
+ * Copies every results/<YYYY-MM-DD>/ directory (result.md renamed to
  * index.md, plus its SVG charts and results.json) to docs/benchmarks/<date>/,
  * and generates docs/benchmarks/index.md listing every run, newest first.
  * docs/benchmarks/ is generated output (gitignored), like the pages produced
- * by scripts/generate-docs.ts — the source of truth stays in benchmarks/.
+ * by scripts/generate-docs.ts — the source of truth stays in results/. No
+ * longer wired into docs:build/docs:dev or the site nav — run manually.
  *
- * Run with: bun scripts/bench/publish.ts (or bun run bench:publish)
+ * Run with: bun apps/benchmarks/publish.ts (or bun run bench:publish)
  */
 import {
   copyFileSync,
@@ -20,13 +21,13 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 
-const root = join(import.meta.dir, '../..');
-const srcDir = join(root, 'benchmarks');
-const outDir = join(root, 'docs', 'benchmarks');
+const repoRoot = join(import.meta.dir, '../..');
+const srcDir = join(import.meta.dir, 'results');
+const outDir = join(repoRoot, 'docs', 'benchmarks');
 
 if (!existsSync(srcDir)) {
   console.error(
-    'Nothing to publish: benchmarks/ does not exist. Run `bun run bench` first.',
+    'Nothing to publish: results/ does not exist. Run `bun run bench` first.',
   );
   process.exit(1);
 }
@@ -40,7 +41,7 @@ const runs = readdirSync(srcDir, { withFileTypes: true })
 
 if (runs.length === 0) {
   console.error(
-    'Nothing to publish: no benchmarks/<date>/result.md found. Run `bun run bench` first.',
+    'Nothing to publish: no results/<date>/result.md found. Run `bun run bench` first.',
   );
   process.exit(1);
 }

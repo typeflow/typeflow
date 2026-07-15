@@ -31,7 +31,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { BENCH_SCENARIOS } from './bench/scenarios';
+import { BENCH_SCENARIOS } from './bench-scenarios';
 import { type Builtin } from '../src/builtins/types';
 import { BUILTIN_GROUPS } from '../src/builtins/index';
 import { compile } from '../src/compiler/index';

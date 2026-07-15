@@ -1,0 +1,15 @@
+{
+  "name": "@typeflow/benchmarks",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Typeflow runtime benchmarks vs jq and JSONata",
+  "type": "module",
+  "scripts": {
+    "bench": "bun run.ts",
+    "bench:publish": "bun publish.ts"
+  },
+  "devDependencies": {
+    "jq-wasm": "^3.0.0-jq-1.8.2",
+    "jsonata": "^2.2.1"
+  }
+}

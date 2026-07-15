@@ -260,7 +260,6 @@ export default defineConfig({
             items: [
               { text: 'Essayer en direct', link: '/fr/playground' },
               { text: 'Benchmark', link: '/fr/benchmark' },
-              { text: 'Rapports de benchmark', link: '/benchmarks/' },
             ],
           },
         ],
@@ -356,7 +355,6 @@ export default defineConfig({
         items: [
           { text: 'Try it live', link: '/playground' },
           { text: 'Benchmark', link: '/benchmark' },
-          { text: 'Benchmark reports', link: '/benchmarks/' },
         ],
       },
     ],

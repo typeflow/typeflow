@@ -14,12 +14,16 @@
  * equality) for every scenario × size — the /benchmark page's guarantee,
  * enforced here too.
  *
- * Writes benchmarks/<YYYY-MM-DD>/: results.json, one SVG chart per scenario,
+ * Writes results/<YYYY-MM-DD>/: results.json, one SVG chart per scenario,
  * a typeflow-vs-jsonata summary chart, and result.md embedding them.
  *
- * Run with: bun run bench — then bun run bench:publish to publish into docs/.
+ * Run with: bun run bench — then bun run bench:publish (manual — no longer
+ * wired into docs:build/docs:dev) to publish into docs/.
  */
-import { BENCH_SCENARIOS, type BenchScenario } from './scenarios';
+import {
+  BENCH_SCENARIOS,
+  type BenchScenario,
+} from '../../scripts/bench-scenarios';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { compile } from '../../src/compiler';
 import { createMapping } from '../../src/runtime';
@@ -54,32 +58,55 @@ interface Measure {
 
 type Runner = (input: unknown) => unknown | Promise<unknown>;
 
-/** Adaptive timing: warm up ~60 ms, then measure ≈300 ms of active time. */
+const WARMUP_MS = 250;
+const TRIALS = 9;
+const TRIAL_ACTIVE_MS = 150;
+
+/**
+ * Warm up ~250 ms (JIT/WASM-instantiation settle time), then take `TRIALS`
+ * independent ~150 ms samples and report the *median* ops/s.
+ *
+ * A single continuous sample (the previous approach) is one draw from a
+ * noisy distribution — GC pauses, OS scheduling, and background load land
+ * unevenly across runs and swing the result run-to-run. Several independent
+ * trials, each with their own batch-growth ramp-up, resist that: an outlier
+ * trial (one bad GC pause) doesn't dominate the median the way it would an
+ * average, and the run-to-run report stabilizes.
+ */
 async function bench(
   fn: () => unknown | Promise<unknown>,
 ): Promise<{ opsPerSec: number; iterations: number; activeMs: number }> {
   let sink: unknown;
-  // Warmup: let the JIT settle on the hot shapes.
-  const warmEnd = performance.now() + 60;
+  const warmEnd = performance.now() + WARMUP_MS;
   while (performance.now() < warmEnd) sink = await fn();
 
-  let iterations = 0;
-  let active = 0;
-  let batch = 1;
-  while (active < 300) {
-    const t0 = performance.now();
-    for (let i = 0; i < batch; i++) sink = await fn();
-    const dt = performance.now() - t0;
-    active += dt;
-    iterations += batch;
-    // Grow batches until each takes ~25 ms, so timer noise stays small.
-    if (dt < 25) batch = Math.min(batch * 2, 1 << 20);
+  const trialOpsPerSec: number[] = [];
+  let totalIterations = 0;
+  let totalActive = 0;
+  for (let trial = 0; trial < TRIALS; trial++) {
+    let iterations = 0;
+    let active = 0;
+    let batch = 1;
+    while (active < TRIAL_ACTIVE_MS) {
+      const t0 = performance.now();
+      for (let i = 0; i < batch; i++) sink = await fn();
+      const dt = performance.now() - t0;
+      active += dt;
+      iterations += batch;
+      // Grow batches until each takes ~15 ms, so timer noise stays small.
+      if (dt < 15) batch = Math.min(batch * 2, 1 << 20);
+    }
+    trialOpsPerSec.push(iterations / (active / 1000));
+    totalIterations += iterations;
+    totalActive += active;
   }
   void sink;
+  trialOpsPerSec.sort((a, b) => a - b);
+  const median = trialOpsPerSec[Math.floor(trialOpsPerSec.length / 2)]!;
   return {
-    opsPerSec: iterations / (active / 1000),
-    iterations,
-    activeMs: active,
+    opsPerSec: median,
+    iterations: totalIterations,
+    activeMs: totalActive,
   };
 }
 
@@ -262,7 +289,7 @@ function ratioChart(measures: Measure[]): string {
 // ---------------------------------------------------------------------------
 
 const date = new Date().toISOString().slice(0, 10);
-const outDir = join(import.meta.dir, '../../benchmarks', date);
+const outDir = join(import.meta.dir, 'results', date);
 mkdirSync(outDir, { recursive: true });
 
 const measures: Measure[] = [];
@@ -349,7 +376,7 @@ title: Benchmark — ${date}
 
 # Benchmark — ${date}
 
-_Measured on: ${meta.runtime}, ${meta.platform}. Scenarios from \`scripts/bench/scenarios.ts\` — the same ones the docs' [/benchmark page](/benchmark) uses. All four implementations are checked to produce identical output (JSON) before any number is measured. Each engine is compiled/parsed once; the numbers compare per-call execution._
+_Measured on: ${meta.runtime}, ${meta.platform}. Scenarios from \`scripts/bench-scenarios.ts\` — the same ones the docs' [/benchmark page](/benchmark) uses. All four implementations are checked to produce identical output (JSON) before any number is measured. Each engine is compiled/parsed once; the numbers compare per-call execution._
 
 ## Implementations compared
 
@@ -387,7 +414,7 @@ _Bars are normalized per size group (the group's max = full width): sizes differ
 ## Reproducing
 
 \`\`\`sh
-bun run bench          # writes benchmarks/<date>/
+bun run bench          # writes apps/benchmarks/results/<date>/
 bun run bench:publish  # publishes the reports into the docs (docs/benchmarks/)
 \`\`\`
 `;
