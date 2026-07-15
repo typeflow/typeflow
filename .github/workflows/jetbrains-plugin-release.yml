@@ -13,54 +13,25 @@ defaults:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    # Job-level env: build.gradle.kts reads these via
-    # providers.environmentVariable(...), and publishPlugin depends on
-    # signPlugin — so the signing variables must be visible to every Gradle
-    # invocation, not just a dedicated signing step. (This also sidesteps the
-    # `secrets` context being unavailable in `if:` conditions.)
+    # NOTE on secret naming: the only secret currently configured is
+    # JETBRAINS_PRIVATE_KEY, but its value is actually a Marketplace API
+    # token (from plugins.jetbrains.com -> My Tokens), not a code-signing
+    # private key — no real signing key/certificate is configured. So this
+    # workflow publishes unsigned: JetBrains recommends signing plugins, but
+    # doesn't require it to publish. If a real signing key gets added later,
+    # rename this secret (e.g. to JETBRAINS_MARKETPLACE_TOKEN) first to avoid
+    # colliding with the real JETBRAINS_PRIVATE_KEY, then reintroduce a
+    # signPlugin step reading JETBRAINS_CERTIFICATE_CHAIN/_PRIVATE_KEY.
     env:
-      CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
-      PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
-      PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
-      PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+      PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v6
       - name: Verify release secrets are configured
-        # Fail fast with the exact list of missing secrets instead of dying
-        # halfway through signing or publishing. Only the private key and the
-        # Marketplace token are required: the certificate chain is derived
-        # from the key when absent (next step), and PRIVATE_KEY_PASSWORD only
-        # exists for encrypted keys.
-        # if-blocks, not `[ -z ... ] && ...`: the workflow shell runs with
-        # `bash -e`, where a false test as the head of an AND-list fails the
-        # whole step even though nothing is wrong.
         run: |
-          missing=()
-          if [ -z "$PRIVATE_KEY" ]; then missing+=(JETBRAINS_PRIVATE_KEY); fi
-          if [ -z "$PUBLISH_TOKEN" ]; then missing+=(JETBRAINS_MARKETPLACE_TOKEN); fi
-          if [ "${#missing[@]}" -gt 0 ]; then
-            echo "::error::Missing repository secrets: ${missing[*]}"
+          if [ -z "$PUBLISH_TOKEN" ]; then
+            echo "::error::Missing repository secret: JETBRAINS_PRIVATE_KEY (holds the Marketplace token)"
             exit 1
           fi
-      - name: Derive the signing certificate from the private key
-        # Marketplace author signing uses a self-signed certificate (it
-        # re-signs on upload), so when no JETBRAINS_CERTIFICATE_CHAIN secret
-        # is configured, generate the chain from the private key — the same
-        # `openssl req -x509` JetBrains' plugin-signing docs prescribe.
-        if: env.CERTIFICATE_CHAIN == ''
-        run: |
-          key_file="$RUNNER_TEMP/typeflow-signing-key.pem"
-          printf '%s\n' "$PRIVATE_KEY" > "$key_file"
-          args=(-new -x509 -key "$key_file" -days 3650 -subj "/CN=Thomas Farineau" -out chain.crt)
-          if [ -n "$PRIVATE_KEY_PASSWORD" ]; then args+=(-passin env:PRIVATE_KEY_PASSWORD); fi
-          openssl req "${args[@]}"
-          rm -f "$key_file"
-          {
-            echo "CERTIFICATE_CHAIN<<TYPEFLOW_CERT_EOF"
-            cat chain.crt
-            echo "TYPEFLOW_CERT_EOF"
-          } >> "$GITHUB_ENV"
-          rm -f chain.crt
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -76,6 +47,7 @@ jobs:
             exit 1
           fi
       - run: ./gradlew build
-      - run: ./gradlew signPlugin
       - name: Publish to JetBrains Marketplace
+        # Unsigned build: no signing key is configured (see the job env
+        # note above). Signing is recommended by JetBrains, not required.
         run: ./gradlew publishPlugin
