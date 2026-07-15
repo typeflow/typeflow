@@ -1,0 +1,40 @@
+name: Publish VS Code plugin
+
+on:
+  push:
+    tags:
+      - 'vscode-v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify release secrets are configured
+        run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::error::Missing repository secret: VSCE_PAT (Visual Studio Marketplace personal access token)"
+            exit 1
+          fi
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile --cwd apps/vscode-plugin
+      - name: Verify tag matches plugin version
+        if: github.event_name == 'push'
+        run: |
+          tag_version="${GITHUB_REF_NAME#vscode-v}"
+          plugin_version="$(node -p "require('./apps/vscode-plugin/package.json').version")"
+          if [ "$tag_version" != "$plugin_version" ]; then
+            echo "Tag vscode-v$tag_version does not match package.json version $plugin_version"
+            exit 1
+          fi
+      - run: bun run --cwd apps/vscode-plugin typecheck
+      - run: bun run --cwd apps/vscode-plugin build
+      - name: Publish to Visual Studio Marketplace
+        working-directory: apps/vscode-plugin
+        run: bunx @vscode/vsce publish -p "$VSCE_PAT" --no-dependencies

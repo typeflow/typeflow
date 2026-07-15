@@ -12,7 +12,7 @@
     "type": "git",
     "url": "https://github.com/thomasfarineau/typeflow"
   },
-  "publisher": "thomasfarineau",
+  "publisher": "typeflow",
   "main": "./dist/extension.js",
   "scripts": {
     "build": "bun scripts/build.ts",
