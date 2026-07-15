@@ -23,6 +23,11 @@ jobs:
       - run: bun apps/cli/src/main.ts types "examples/**/*.typeflow" --check
       - run: bun run --cwd apps/vscode-plugin typecheck
       - run: bun run --cwd apps/vscode-plugin build
+      - run: bun install --frozen-lockfile --cwd apps/plugin
+      - run: bun run --cwd apps/plugin typecheck
+      - # builds the plugin, then verifies its three hooks (node esm import,
+        # node cjs require, bun import) against real processes
+        run: bun run --cwd apps/plugin test
 
   converters:
     runs-on: ubuntu-latest

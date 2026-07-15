@@ -31,6 +31,11 @@ const links: { scope?: string; name: string; target: string }[] = [
     name: 'converters',
     target: join(root, 'apps', 'converters'),
   },
+  {
+    scope: '@typeflow',
+    name: 'plugin',
+    target: join(root, 'apps', 'plugin'),
+  },
 ];
 
 for (const { scope, name, target } of links) {

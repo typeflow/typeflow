@@ -1,0 +1,10 @@
+dist/
+node_modules/
+
+# Emitted by the smoke test's tsc / vite runs
+test/ts-app/app-esm.js
+test/ts-app/app-cjs.cjs
+test/vite-app/out/
+
+# Emitted when running the examples (their READMEs' tsc step)
+examples/typescript/app.js
