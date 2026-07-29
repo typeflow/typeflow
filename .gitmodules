@@ -1,0 +1,27 @@
+[submodule "apps/docs"]
+	path = apps/docs
+	url = https://github.com/typeflow/docs.git
+[submodule "apps/playground"]
+	path = apps/playground
+	url = https://github.com/typeflow/playground.git
+[submodule "apps/cli"]
+	path = apps/cli
+	url = https://github.com/typeflow/cli.git
+[submodule "apps/plugin-typescript"]
+	path = apps/plugin-typescript
+	url = https://github.com/typeflow/plugin-typescript.git
+[submodule "apps/plugin-vscode"]
+	path = apps/plugin-vscode
+	url = https://github.com/typeflow/plugin-vscode.git
+[submodule "apps/plugin-jetbrains"]
+	path = apps/plugin-jetbrains
+	url = https://github.com/typeflow/plugin-jetbrains.git
+[submodule "apps/converters"]
+	path = apps/converters
+	url = https://github.com/typeflow/converters.git
+[submodule "apps/benchmarks"]
+	path = apps/benchmarks
+	url = https://github.com/typeflow/benchmarks.git
+[submodule "apps/lint-config"]
+	path = apps/lint-config
+	url = https://github.com/typeflow/lint-config.git
