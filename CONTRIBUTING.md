@@ -9,13 +9,6 @@ $ bun run typecheck              # generate example declarations + tsc --noEmit
 $ bun run demo                   # compile + run examples/api-response
 ```
 
-`apps/benchmarks` needs its own first-time install (Bun workspaces aren't
-used):
-
-```console
-$ bun install --cwd apps/benchmarks
-```
-
 ## Scripts
 
 | Script                | Does                                                    |
@@ -27,7 +20,6 @@ $ bun install --cwd apps/benchmarks
 | `bun run format`        | `oxfmt .`                                                  |
 | `bun run format:check`  | `oxfmt --check .`                                          |
 | `bun run check`         | build + lint + format:check + test — run before opening a PR |
-| `bun run bench`         | Runtime benchmarks vs jq/JSONata (`apps/benchmarks`)        |
 
 ## Commit messages
 
