@@ -4,7 +4,7 @@
 
 Typeflow is a declarative mapping language for JSON with first-class TypeScript typing — validated paths, inferred output types, and compile-time errors for your data transformations.
 
-**[▶ Try it in the Playground](https://typeflow.github.io/typeflow/playground)** · [Documentation](https://typeflow.github.io/typeflow/)
+**[▶ Try it in the Playground](https://typeflow.github.io/docs/playground)** · [Documentation](https://typeflow.github.io/docs/)
 
 You've written this function a hundred times: take the API's JSON, reshape it into the type your app wants. It's boring, it's error-prone, and when the API changes, TypeScript can't tell you which of your forty mapping functions just broke. JSONata and jq make the transformation declarative — but invisible to your compiler. Typeflow makes it declarative _and_ typed: paths autocomplete, typos are compile errors, output types are inferred, and your mappings are artifacts you can test, diff, and trust.
 
@@ -168,15 +168,18 @@ Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"
 
 Each `apps/*` package has its own `package.json`; see its `README.md` for
 build steps and why it isn't a declared Bun workspace member. The VS Code
-and JetBrains IDE plugins, and the converters that migrate mappings from
-other JSON mapping languages onto Typeflow, live in their own repos —
+and JetBrains IDE plugins, the converters that migrate mappings from other
+JSON mapping languages onto Typeflow, and the documentation site, live in
+their own repos —
 [`typeflow/plugin-vscode`](https://github.com/typeflow/plugin-vscode),
-[`typeflow/plugin-jetbrains`](https://github.com/typeflow/plugin-jetbrains)
-and [`typeflow/converters`](https://github.com/typeflow/converters) — since
-none of them share source with the monorepo (the plugins shell out to the
-published `typeflow` CLI; `@typeflowjs/converters` is a separate Rust/napi-rs
-toolchain the CLI's `convert` command imports lazily as an optional
-dependency).
+[`typeflow/plugin-jetbrains`](https://github.com/typeflow/plugin-jetbrains),
+[`typeflow/converters`](https://github.com/typeflow/converters) and
+[`typeflow/docs`](https://github.com/typeflow/docs) — since none of them
+share source with the monorepo (the plugins shell out to the published
+`typeflow` CLI; `@typeflowjs/converters` is a separate Rust/napi-rs toolchain
+the CLI's `convert` command imports lazily as an optional dependency; the
+docs site depends on the published `typeflowjs` package instead of reaching
+into `src/` directly).
 
 ## Development
 
@@ -187,7 +190,6 @@ $ bun install                    # root deps; also links typeflowjs into
 $ bun test                       # 133 tests across parser, compiler, runtime, adapter, e2e
 $ bun run typecheck              # generate example declarations + tsc --noEmit
 $ bun run demo                   # compile + run examples/api-response
-$ bun run docs:dev               # docs + playground (VitePress)
 ```
 
 `apps/cli`, `apps/plugin` and `apps/benchmarks` each need their own

@@ -36,10 +36,5 @@ export default defineConfig({
     'sort-imports': ['error', { ignoreCase: true, allowSeparatedGroups: true }],
     'unicorn/no-process-exit': 'off',
   },
-  ignorePatterns: [
-    '**/node_modules/**',
-    'dist/**',
-    'docs/.vitepress/cache/**',
-    'docs/.vitepress/dist/**',
-  ],
+  ignorePatterns: ['**/node_modules/**', 'dist/**'],
 });
