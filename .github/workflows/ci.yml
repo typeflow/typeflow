@@ -6,6 +6,18 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run format:check
+      - run: bun run typecheck
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -14,8 +26,16 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      - # build (root lib) + lint + format:check + bun test
-        run: bun run check
-      - run: bun run typecheck
-      - run: bun scripts/check-examples.ts check
+      - run: bun test
+      - run: bun run check:examples
       - run: bun scripts/check-examples.ts types --check
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run build
