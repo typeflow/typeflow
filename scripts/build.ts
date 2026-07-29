@@ -38,14 +38,27 @@ const cjs = await Bun.build({
   external,
 });
 
-for (const result of [esm, cjs]) {
+// Browser-safe subset (no node:fs/node:path/typescript — see src/index.browser.ts):
+// resolved instead of dist/index.js by bundlers that request the "browser"
+// condition (Vite, webpack, ...), so client bundles never pull in the
+// TS-adapter's Node-only dependencies just from importing "typeflowjs".
+const browser = await Bun.build({
+  entrypoints: [`${root}src/index.browser.ts`],
+  outdir: `${root}dist`,
+  root: `${root}src`,
+  target: 'node',
+  format: 'esm',
+  splitting: false,
+});
+
+for (const result of [esm, cjs, browser]) {
   if (!result.success) {
     for (const log of result.logs) console.error(log);
     process.exit(1);
   }
 }
 console.log(
-  `✔ bundled ${esm.outputs.length} ESM + ${cjs.outputs.length} CJS file(s)`,
+  `✔ bundled ${esm.outputs.length} ESM + ${cjs.outputs.length} CJS + ${browser.outputs.length} browser file(s)`,
 );
 
 const tsc = Bun.spawnSync(

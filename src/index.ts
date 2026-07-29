@@ -6,47 +6,12 @@ import { formatDiagnostic } from '#core';
 import { loadExternalFunctions } from './runtime/external';
 import { readFile } from 'node:fs/promises';
 
-export * from './core/index';
-export {
-  parse,
-  tokenize,
-  type Token,
-  type TokenType,
-  type TokenizeOptions,
-} from './parser/index';
-export {
-  compile,
-  defineFunction,
-  emitDts,
-  BUILTINS,
-  BUILTIN_GROUPS,
-} from './compiler/index';
-export type {
-  Builtin,
-  BuiltinGroup,
-  BuiltinParam,
-  CompileOptions,
-  CompileResult,
-  DefineFunctionOptions,
-  ResolveTypeRequest,
-  TypeflowFunction,
-  TypeResolver,
-} from './compiler/index';
-export {
-  createMapping,
-  runMapping,
-  TypeflowRuntimeError,
-  type CreateMappingOptions,
-  type ExternalFn,
-  type MappingFn,
-  type NamedFunction,
-} from './runtime/index';
-export { loadExternalFunctions } from './runtime/external';
+export * from './index.browser';
 export {
   createTypeScriptResolver,
   resolveTypeScriptType,
 } from './adapter/index';
-export { format, type FormatResult } from './formatter/index';
+export { loadExternalFunctions } from './runtime/external';
 
 /** Compile a `.typeflow` file from disk with the TypeScript schema adapter wired in. */
 export async function compileTypeflowFile(

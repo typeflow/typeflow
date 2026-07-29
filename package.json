@@ -1,6 +1,6 @@
 {
   "name": "typeflowjs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Typed JSON transformations, checked at compile time. Declarative .typeflow mapping files with TypeScript-native typing.",
   "keywords": [
     "dsl",
@@ -23,6 +23,7 @@
     "src"
   ],
   "type": "module",
+  "sideEffects": false,
   "types": "./dist/types/index.d.ts",
   "imports": {
     "#core": "./src/core/index.ts",
@@ -38,6 +39,7 @@
     ".": {
       "types": "./dist/types/index.d.ts",
       "bun": "./src/index.ts",
+      "browser": "./dist/index.browser.js",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
