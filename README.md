@@ -168,8 +168,8 @@ Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"
 
 Each `apps/*` package has its own `package.json`; see its `README.md` for
 build steps and why it isn't a declared Bun workspace member. The VS Code
-and JetBrains IDE plugins, and the native jq/JSONata converters, live in
-their own repos —
+and JetBrains IDE plugins, and the converters that migrate mappings from
+other JSON mapping languages onto Typeflow, live in their own repos —
 [`typeflow/plugin-vscode`](https://github.com/typeflow/plugin-vscode),
 [`typeflow/plugin-jetbrains`](https://github.com/typeflow/plugin-jetbrains)
 and [`typeflow/converters`](https://github.com/typeflow/converters) — since
