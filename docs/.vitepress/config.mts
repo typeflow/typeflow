@@ -1,26 +1,19 @@
-// Value imports from the library go through the package name: Vite's config
-// bundler externalizes them, and Node then resolves the export map to the
-// built dist/index.js (docs:dev / docs:build run `bun scripts/build.ts`
-// first). Importing ../../src here instead would make Node load the raw
-// TypeScript sources at config time, where the runtime `#core`-style subpath
-// imports and extensionless relative imports don't resolve.
+// Value imports from the library go through the package name (typeflowjs,
+// a real npm dependency): Vite's config bundler externalizes them, and Node
+// resolves the export map to the installed package's built dist/index.js.
+import { type Builtin, BUILTIN_GROUPS } from 'typeflowjs';
 import { type DefaultTheme, defineConfig } from 'vitepress';
 import { readdirSync, readFileSync } from 'node:fs';
-import { type Builtin } from '../../src/builtins/types';
-import { BUILTIN_GROUPS } from 'typeflowjs';
 import container from 'markdown-it-container';
-import { DOC_PAGES } from '../../scripts/doc-pages';
+import { DOC_PAGES } from '../scripts/doc-pages';
 import { fileURLToPath } from 'node:url';
-import { FR_FUNCTION_GROUPS } from '../../scripts/doc-pages/i18n/fr-functions';
+import { FR_FUNCTION_GROUPS } from '../scripts/doc-pages/i18n/fr-functions';
 import { highlightTypeflow } from './theme/highlight';
 import { join } from 'node:path';
 import type MarkdownIt from 'markdown-it';
 
 type Locale = 'en' | 'fr';
 const prefix = (locale: Locale) => (locale === 'fr' ? '/fr' : '');
-
-const pkg = (name: string) =>
-  fileURLToPath(new URL(`../../src/${name}/index.ts`, import.meta.url));
 
 function slug(text: string): string {
   return text
@@ -178,19 +171,16 @@ function playgroundContainer(md: MarkdownIt): void {
   });
 }
 
-const SITE = 'https://typeflow.github.io/typeflow/';
+const SITE = 'https://typeflow.github.io/docs/';
 
 export default defineConfig({
   title: 'Typeflow',
   description: 'Typed JSON transformations, checked at compile time.',
-  base: '/typeflow/',
+  base: '/docs/',
   lastUpdated: true,
   sitemap: { hostname: SITE },
   head: [
-    [
-      'link',
-      { rel: 'icon', type: 'image/svg+xml', href: '/typeflow/logo.svg' },
-    ],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/docs/logo.svg' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'Typeflow' }],
     ['meta', { property: 'og:image', content: `${SITE}logo.svg` }],
@@ -265,8 +255,7 @@ export default defineConfig({
         ],
         outline: { label: 'Sur cette page', level: [2, 4] },
         editLink: {
-          pattern:
-            'https://github.com/typeflow/typeflow/edit/main/docs/:path',
+          pattern: 'https://github.com/typeflow/docs/edit/main/:path',
           text: 'Modifier cette page sur GitHub',
         },
         lastUpdated: { text: 'Mis à jour' },
@@ -286,8 +275,7 @@ export default defineConfig({
     logo: '/logo.svg',
     outline: { level: [2, 4] },
     editLink: {
-      pattern:
-        'https://github.com/typeflow/typeflow/edit/main/docs/:path',
+      pattern: 'https://github.com/typeflow/docs/edit/main/:path',
       text: 'Edit this page on GitHub',
     },
     search: {
@@ -370,22 +358,6 @@ export default defineConfig({
     config: (md) => {
       typeflowFence(md);
       playgroundContainer(md);
-    },
-  },
-  vite: {
-    resolve: {
-      // The playground imports the compiler by its old per-package names; map them to src/.
-      alias: {
-        '@thomasfarineau/typeflow-core': pkg('core'),
-        '@thomasfarineau/typeflow-parser': pkg('parser'),
-        '@thomasfarineau/typeflow-formatter': pkg('formatter'),
-        '@thomasfarineau/typeflow-compiler': pkg('compiler'),
-        '@thomasfarineau/typeflow-runtime': pkg('runtime'),
-      },
-    },
-    ssr: {
-      // Workspace packages ship TypeScript source; bundle them during SSR build.
-      noExternal: [/@thomasfarineau\/typeflow/],
     },
   },
 });

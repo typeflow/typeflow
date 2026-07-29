@@ -16,6 +16,9 @@ export {
   BUILTIN_GROUPS,
 } from './compiler/index';
 export type {
+  Builtin,
+  BuiltinGroup,
+  BuiltinParam,
   CompileOptions,
   CompileResult,
   DefineFunctionOptions,

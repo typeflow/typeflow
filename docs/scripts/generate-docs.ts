@@ -1,17 +1,25 @@
 /**
- * Generates, for each locale (en → docs/, fr → docs/fr/):
+ * Generates, for each locale (en → ../, fr → ../fr/):
  *  - operators/*.md — one page per DocPage declared in scripts/doc-pages/pages/*
- *  - functions/*.md — one page per builtin group in src/builtins/*, plus
+ *  - functions/*.md — one page per builtin group in typeflowjs's builtins, plus
  *    index.md (searchable FnIndex) and custom.md
  *  - reference/diagnostics.md — every TF-code, from scripts/doc-pages/diagnostics.ts
  * Nothing under these directories is written by hand (all are gitignored).
- * Run with: bun scripts/generate-docs (wired into docs:gen / docs:dev / docs:build).
+ * Run with: bun scripts/generate-docs.ts (wired into docs:gen / docs:dev / docs:build).
  *
  * Everything claimable is verified at generation time: diagnostic examples
- * must emit their code, every TF-code present in src/ must be documented —
- * and every French translation must exist (scripts/doc-pages/i18n/*), or the
- * build fails.
+ * must emit their code, every TF-code present in typeflowjs's source must be
+ * documented (read from node_modules/typeflowjs/src, shipped alongside dist
+ * for exactly this) — and every French translation must exist
+ * (scripts/doc-pages/i18n/*), or the build fails.
  */
+import {
+  type Builtin,
+  BUILTIN_GROUPS,
+  compile,
+  createMapping,
+} from 'typeflowjs';
+import { dirname, join } from 'node:path';
 import { DOC_PAGES, type DocExample } from './doc-pages';
 import {
   FR_CUSTOM_FUNCTIONS_BODY,
@@ -32,24 +40,26 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { BENCH_SCENARIOS } from './bench-scenarios';
-import { type Builtin } from '../src/builtins/types';
-import { BUILTIN_GROUPS } from '../src/builtins/index';
-import { compile } from '../src/compiler/index';
-import { createMapping } from '../src/runtime/index';
+import { createRequire } from 'node:module';
 import { DIAGNOSTICS } from './doc-pages/diagnostics';
 import { fileURLToPath } from 'node:url';
 import { FR_DIAGNOSTICS } from './doc-pages/i18n/fr-diagnostics';
 import { FR_OPERATOR_PAGES } from './doc-pages/i18n/fr-operators';
-import { join } from 'node:path';
 
 type Locale = 'en' | 'fr';
 const LOCALES: Locale[] = ['en', 'fr'];
 
 function docsDir(locale: Locale, section: string): string {
-  const base = locale === 'fr' ? `../docs/fr/${section}` : `../docs/${section}`;
+  const base = locale === 'fr' ? `../fr/${section}` : `../${section}`;
   return fileURLToPath(new URL(base, import.meta.url));
 }
-const srcDir = fileURLToPath(new URL('../src', import.meta.url));
+// typeflowjs ships its TS source alongside dist (see its package.json
+// "files") specifically so this diagnostic-code sweep still works once docs
+// is a separate repo that only depends on the published package.
+const srcDir = join(
+  dirname(createRequire(import.meta.url).resolve('typeflowjs/package.json')),
+  'src',
+);
 
 /** A missing French key is a build error, not a silent English fallback. */
 function missing(what: string): never {

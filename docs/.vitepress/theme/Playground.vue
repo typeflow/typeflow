@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { decodePlaygroundState, encodePlaygroundState } from './share';
 import {
+  compile,
+  createMapping,
   type Diagnostic,
+  format,
   offsetToLineCol,
   typeToString,
-} from '@thomasfarineau/typeflow-core';
+} from 'typeflowjs';
+import { computed, onMounted, ref } from 'vue';
+import { decodePlaygroundState, encodePlaygroundState } from './share';
 import { highlightJson, highlightTypeflow } from './highlight';
 import CodeEditor from './CodeEditor.vue';
-import { compile } from '@thomasfarineau/typeflow-compiler';
-import { createMapping } from '@thomasfarineau/typeflow-runtime';
 import { DEMO_FUNCTIONS } from './demo-functions';
-import { format } from '@thomasfarineau/typeflow-formatter';
 import { useData } from 'vitepress';
 
 const DEFAULT_MAPPING = `# The playground uses inline input declarations.

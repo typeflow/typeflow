@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import {
+  compile,
+  createMapping,
   type Diagnostic,
   offsetToLineCol,
   typeToString,
-} from '@thomasfarineau/typeflow-core';
+} from 'typeflowjs';
+import { computed, ref } from 'vue';
 import { highlightJson, highlightTypeflow } from './highlight';
 import { useData, withBase } from 'vitepress';
 import CodeEditor from './CodeEditor.vue';
-import { compile } from '@thomasfarineau/typeflow-compiler';
-import { createMapping } from '@thomasfarineau/typeflow-runtime';
 import { DEMO_FUNCTIONS } from './demo-functions';
 import { encodePlaygroundState } from './share';
 

@@ -2,13 +2,12 @@
 import {
   BENCH_SCENARIOS,
   type BenchScenario,
-} from '../../../scripts/bench/scenarios';
+} from '../../scripts/bench-scenarios';
+import { compile, createMapping } from 'typeflowjs';
 import { computed, reactive, ref } from 'vue';
 // The inline build embeds the WASM binary in the module: no asset fetch, so
 // it survives Vite dep pre-bundling (the URL-based browser entry 404s there).
 import { json as jqJson, loadJq } from 'jq-wasm/inline';
-import { compile } from '@thomasfarineau/typeflow-compiler';
-import { createMapping } from '@thomasfarineau/typeflow-runtime';
 import { highlightTypeflow } from './highlight';
 import jsonata from 'jsonata';
 import { useData } from 'vitepress';
