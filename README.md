@@ -187,15 +187,14 @@ process) instead of reaching into `src/` directly.
 ## Development
 
 ```console
-$ bun install                    # root deps; also links typeflowjs into
-                                  # node_modules (see scripts/link-local-deps.ts)
+$ bun install                    # root deps
 $ bun test                       # 133 tests across parser, compiler, runtime, adapter, e2e
 $ bun run typecheck              # generate example declarations + tsc --noEmit
 $ bun run demo                   # compile + run examples/api-response
 ```
 
 `apps/benchmarks` needs its own first-time install (Bun workspaces aren't
-used — see `scripts/link-local-deps.ts`):
+used):
 
 ```console
 $ bun install --cwd apps/benchmarks

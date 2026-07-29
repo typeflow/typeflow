@@ -12,7 +12,7 @@ import {
   createTypeScriptResolver,
   emitDts,
   formatDiagnostic,
-} from 'typeflowjs';
+} from '../src/index';
 import { readFile, writeFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 import { existsSync } from 'node:fs';

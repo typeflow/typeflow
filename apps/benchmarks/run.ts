@@ -202,8 +202,8 @@ function scenarioChart(
 
   let y = legendH;
   for (const size of sizes) {
-    const group = ENGINES.map(
-      (e) => rows.find((r) => r.size === size && r.engine === e)!,
+    const group = ENGINES.map((e) =>
+      rows.find((r) => r.size === size && r.engine === e)!,
     );
     const max = Math.max(...group.map((r) => r.opsPerSec));
     parts.push(
