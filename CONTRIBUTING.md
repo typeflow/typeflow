@@ -11,15 +11,15 @@ $ bun run demo                   # compile + run examples/api-response
 
 ## Scripts
 
-| Script                | Does                                                    |
-| ---------------------- | -------------------------------------------------------- |
-| `bun run build`         | Build `dist/` (Node/browser/CJS entry points)             |
-| `bun test`              | Run the test suite                                        |
-| `bun run typecheck`     | Regenerate example declarations, then `tsc --noEmit`       |
-| `bun run lint`          | `oxlint .`                                                 |
-| `bun run format`        | `oxfmt .`                                                  |
-| `bun run format:check`  | `oxfmt --check .`                                          |
-| `bun run check`         | build + lint + format:check + test — run before opening a PR |
+| Script                 | Does                                                         |
+| ---------------------- | ------------------------------------------------------------ |
+| `bun run build`        | Build `dist/` (Node/browser/CJS entry points)                |
+| `bun test`             | Run the test suite                                           |
+| `bun run typecheck`    | Regenerate example declarations, then `tsc --noEmit`         |
+| `bun run lint`         | `oxlint .`                                                   |
+| `bun run format`       | `oxfmt .`                                                    |
+| `bun run format:check` | `oxfmt --check .`                                            |
+| `bun run check`        | build + lint + format:check + test — run before opening a PR |
 
 ## Commit messages
 

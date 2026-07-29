@@ -68,6 +68,7 @@
     "check": "bun run build && bun run lint && bun run format:check && bun test"
   },
   "devDependencies": {
+    "@typeflowjs/lint-config": "github:typeflow/lint-config",
     "@types/bun": "^1.3.14",
     "@types/node": "^26.1.2",
     "oxfmt": "^0.61.0",
