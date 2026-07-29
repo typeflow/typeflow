@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
-      # `typeflow-js` and `@typeflow/converters` are marked external by
+      # `typeflowjs` and `@typeflow/converters` are marked external by
       # apps/cli/scripts/build.ts's bundler config, so this build never
       # touches the repo-root postinstall symlink hack (scripts/link-local-deps.ts)
       # — only apps/cli's own dependency (commander) needs installing.

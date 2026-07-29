@@ -19,7 +19,7 @@ the repo root).
 
 ```sh
 bun install            # creates the node_modules symlinks
-bun scripts/build.ts   # typeflow-js dist (the generated modules import typeflow-js/runtime)
+bun scripts/build.ts   # typeflowjs dist (the generated modules import typeflowjs/runtime)
 bun run --cwd apps/plugin build
 ```
 

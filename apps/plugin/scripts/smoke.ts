@@ -14,10 +14,10 @@
  *   9. ts-node CJS (-r ts-node/register + our --import, own tsconfig)
  *
  * Needs the repo root built first (`bun scripts/build.ts` at the root):
- * under Node the generated modules resolve typeflow-js/runtime to dist/.
+ * under Node the generated modules resolve typeflowjs/runtime to dist/.
  * Run with: bun run test (builds this package, then runs this).
  */
-import { compile, createTypeScriptResolver, emitDts } from 'typeflow-js';
+import { compile, createTypeScriptResolver, emitDts } from 'typeflowjs';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'vite';

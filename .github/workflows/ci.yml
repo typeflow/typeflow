@@ -15,14 +15,11 @@ jobs:
           bun-version: latest
       - run: bun install --frozen-lockfile
       - run: bun install --frozen-lockfile --cwd apps/cli
-      - run: bun install --frozen-lockfile --cwd apps/vscode-plugin
       - # build (root lib + apps/cli bin) + lint + format:check + bun test
         run: bun run check
       - run: bun run typecheck
       - run: bun apps/cli/src/main.ts check "examples/**/*.typeflow"
       - run: bun apps/cli/src/main.ts types "examples/**/*.typeflow" --check
-      - run: bun run --cwd apps/vscode-plugin typecheck
-      - run: bun run --cwd apps/vscode-plugin build
       - run: bun install --frozen-lockfile --cwd apps/plugin
       - run: bun run --cwd apps/plugin typecheck
       - # builds the plugin, then verifies its three hooks (node esm import,

@@ -6,7 +6,7 @@
  *
  * Runs on the loader thread: compilation (incl. the TypeScript adapter)
  * happens here, so the consumer's main-thread module graph only ever sees
- * `typeflow-js/runtime` plus the mapping's own `use` modules.
+ * `typeflowjs/runtime` plus the mapping's own `use` modules.
  */
 import { esmModuleSource } from './compile';
 import { fileURLToPath } from 'node:url';

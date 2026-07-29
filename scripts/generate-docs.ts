@@ -325,7 +325,7 @@ createMapping(compiled, { functions: { slugify } });
 Register functions once, application-side — no \`use\` line needed in the mappings. A definition is declared like a builtin: typed signature, doc, implementation:
 
 \`\`\`ts
-import { defineFunction, compile, createMapping } from 'typeflow-js';
+import { defineFunction, compile, createMapping } from 'typeflowjs';
 
 const slugify = defineFunction('slugify(value: string): string', {
   doc: 'Lowercase, dash-separated slug.',

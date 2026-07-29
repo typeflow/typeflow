@@ -5,7 +5,7 @@
  * emit a small ESM module around it.
  *
  * The generated module embeds the COMPILED artifact and only imports
- * `typeflow-js/runtime` (the tiny dependency-free interpreter) plus the
+ * `typeflowjs/runtime` (the tiny dependency-free interpreter) plus the
  * mapping's own `use` modules — the compiler and the TypeScript adapter run
  * once here, in the hook, not in the consumer's module graph.
  */
@@ -14,7 +14,7 @@ import {
   type CompiledMapping,
   createTypeScriptResolver,
   formatDiagnostic,
-} from 'typeflow-js';
+} from 'typeflowjs';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 
@@ -69,7 +69,7 @@ export function compileTypeflowFileSync(filePath: string): CompiledFile {
 
 /**
  * Relative `use` specifiers resolve against the mapping file with the same
- * candidate list as typeflow-js's own loadExternalFunctions — and become
+ * candidate list as typeflowjs's own loadExternalFunctions — and become
  * extension-explicit relative paths, because the generated import must name
  * a concrete file (Node ESM has no extension guessing) and stay portable
  * (file:// URLs would break Vite/Rollup and browser bundling).
@@ -100,7 +100,7 @@ function resolveUseSpecifier(from: string, baseDir: string): string {
 /** The ESM module a `.typeflow` import evaluates to (default export = the mapping fn). */
 export function esmModuleSource(filePath: string): string {
   const { compiled, useImports } = compileTypeflowFileSync(filePath);
-  const lines = [`import { createMapping } from 'typeflow-js/runtime';`];
+  const lines = [`import { createMapping } from 'typeflowjs/runtime';`];
   const functionNames: string[] = [];
   for (const { specifier, names } of useImports) {
     lines.push(

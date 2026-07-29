@@ -6,7 +6,7 @@
  *   export default defineConfig({ plugins: [typeflow()] });
  *
  * Compilation happens here at build/dev time (Node side); the emitted module
- * only imports `typeflow-js/runtime`, which is browser-safe — so `.typeflow`
+ * only imports `typeflowjs/runtime`, which is browser-safe — so `.typeflow`
  * imports work in browser apps, SSR, and library builds alike. `use` module
  * imports are emitted as extension-explicit relative paths, which Vite
  * resolves (and transforms, e.g. for .ts helpers) like any other source file.

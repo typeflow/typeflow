@@ -4,7 +4,7 @@
  * even for a normal, non-root sibling workspace member once the root itself
  * is one of its transitive deps. So apps/cli (and any future apps/*
  * consumer) is deliberately NOT a declared bun workspace member, and doesn't
- * declare `typeflow-js` / `@typeflow/converters` as real package.json
+ * declare `typeflowjs` / `@typeflow/converters` as real package.json
  * dependencies — both would make `bun install`/`bun add` abort.
  * Instead this script manually links each into node_modules/, the same
  * resolution a real npm install of the published packages would produce.
@@ -25,7 +25,7 @@ import { join } from 'node:path';
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 const links: { scope?: string; name: string; target: string }[] = [
-  { name: 'typeflow-js', target: root },
+  { name: 'typeflowjs', target: root },
   {
     scope: '@typeflow',
     name: 'converters',

@@ -1,8 +1,5 @@
 node_modules/
 dist/
-apps/jetbrains-plugin/build/
-apps/jetbrains-plugin/.gradle/
-apps/jetbrains-plugin/.intellijPlatform/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 *.d.typeflow.ts

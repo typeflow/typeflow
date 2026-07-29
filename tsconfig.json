@@ -15,8 +15,8 @@
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "typeflow-js": ["./src/index.ts"],
-      "typeflow-js/runtime": ["./src/runtime/index.ts"]
+      "typeflowjs": ["./src/index.ts"],
+      "typeflowjs/runtime": ["./src/runtime/index.ts"]
     }
   },
   "include": [

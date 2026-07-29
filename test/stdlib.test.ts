@@ -1,4 +1,4 @@
-import { compile, createMapping, typeToString } from 'typeflow-js';
+import { compile, createMapping, typeToString } from 'typeflowjs';
 import { describe, expect, test } from 'bun:test';
 
 function run(expr: string, input: unknown = {}, inputDecl = ''): unknown {

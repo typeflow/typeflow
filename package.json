@@ -1,5 +1,5 @@
 {
-  "name": "typeflow-js",
+  "name": "typeflowjs",
   "version": "0.0.1",
   "description": "Typed JSON transformations, checked at compile time. Declarative .typeflow mapping files with TypeScript-native typing.",
   "keywords": [
@@ -16,7 +16,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/thomasfarineau/typeflow"
+    "url": "https://github.com/typeflow/typeflow"
   },
   "files": [
     "dist",

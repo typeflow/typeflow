@@ -8,7 +8,7 @@ import {
   formatDiagnostic,
   type TypeResolver,
   typeToString,
-} from 'typeflow-js';
+} from 'typeflowjs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 

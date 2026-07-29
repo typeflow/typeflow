@@ -7,7 +7,7 @@
 import { type DefaultTheme, defineConfig } from 'vitepress';
 import { readdirSync, readFileSync } from 'node:fs';
 import { type Builtin } from '../../src/builtins/types';
-import { BUILTIN_GROUPS } from 'typeflow-js';
+import { BUILTIN_GROUPS } from 'typeflowjs';
 import container from 'markdown-it-container';
 import { DOC_PAGES } from '../../scripts/doc-pages';
 import { fileURLToPath } from 'node:url';
@@ -178,7 +178,7 @@ function playgroundContainer(md: MarkdownIt): void {
   });
 }
 
-const SITE = 'https://thomasfarineau.github.io/typeflow/';
+const SITE = 'https://typeflow.github.io/typeflow/';
 
 export default defineConfig({
   title: 'Typeflow',
@@ -266,7 +266,7 @@ export default defineConfig({
         outline: { label: 'Sur cette page', level: [2, 4] },
         editLink: {
           pattern:
-            'https://github.com/thomasfarineau/typeflow/edit/main/docs/:path',
+            'https://github.com/typeflow/typeflow/edit/main/docs/:path',
           text: 'Modifier cette page sur GitHub',
         },
         lastUpdated: { text: 'Mis à jour' },
@@ -287,7 +287,7 @@ export default defineConfig({
     outline: { level: [2, 4] },
     editLink: {
       pattern:
-        'https://github.com/thomasfarineau/typeflow/edit/main/docs/:path',
+        'https://github.com/typeflow/typeflow/edit/main/docs/:path',
       text: 'Edit this page on GitHub',
     },
     search: {
@@ -359,7 +359,7 @@ export default defineConfig({
       },
     ],
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/thomasfarineau/typeflow' },
+      { icon: 'github', link: 'https://github.com/typeflow/typeflow' },
     ],
     footer: {
       message: 'Released under the MIT License.',

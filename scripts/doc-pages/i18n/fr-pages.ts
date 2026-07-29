@@ -89,7 +89,7 @@ createMapping(compiled, { functions: { slugify } });
 Enregistrez des fonctions une fois, côté application — aucune ligne \`use\` nécessaire dans les mappings. Une définition se déclare comme une native : signature typée, doc, implémentation :
 
 \`\`\`ts
-import { defineFunction, compile, createMapping } from 'typeflow-js';
+import { defineFunction, compile, createMapping } from 'typeflowjs';
 
 const slugify = defineFunction('slugify(value: string): string', {
   doc: 'Slug en minuscules, séparé par des tirets.',

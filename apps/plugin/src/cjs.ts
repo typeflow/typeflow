@@ -9,7 +9,7 @@
  * output with esModuleInterop) land on the same function.
  */
 import { compileTypeflowFileSync } from './compile';
-import { createMapping } from 'typeflow-js/runtime';
+import { createMapping } from 'typeflowjs/runtime';
 import { createRequire } from 'node:module';
 
 type ExternalFn = (...args: unknown[]) => unknown;

@@ -17,7 +17,7 @@ hero:
       link: /fr/guide/getting-started
     - theme: alt
       text: GitHub
-      link: https://github.com/thomasfarineau/typeflow
+      link: https://github.com/typeflow/typeflow
 
 features:
   - icon: 🧭
@@ -147,7 +147,7 @@ Zod est une _entrée_ naturelle de Typeflow, pas un concurrent : Zod répond « 
 ## Démarrez en une minute
 
 ```console
-$ bun add -d typeflow-js
+$ bun add -d typeflowjs
 $ bunx typeflow init                 # génère un mapping d'exemple
 $ bunx typeflow check                # diagnostics façon tsc
 $ bunx typeflow run user.typeflow --input data.json

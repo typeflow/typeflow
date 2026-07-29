@@ -56,7 +56,7 @@ export default defineConfig({ plugins: [typeflow()] });
 ```
 
 Compilation happens at build/dev time and the emitted module only pulls the
-browser-safe `typeflow-js/runtime`, so this works for browser apps too — the
+browser-safe `typeflowjs/runtime`, so this works for browser apps too — the
 compiler never ships to the client.
 
 Runnable examples for every environment live in [`examples/`](./examples/).
@@ -66,7 +66,7 @@ Runnable examples for every environment live in [`examples/`](./examples/).
 All three hooks share one core (`src/compile.ts`): the file is compiled once
 in the hook (TypeScript adapter included, so `input x: T from "./types"`
 works), and the emitted module embeds the compiled JSON artifact — at
-runtime the consumer's module graph only loads `typeflow-js/runtime` (the
+runtime the consumer's module graph only loads `typeflowjs/runtime` (the
 tiny dependency-free interpreter) plus the mapping's own `use` modules,
 never the compiler.
 
@@ -79,7 +79,7 @@ never the compiler.
   Node ESM (no extension guessing), Vite, and Bun alike. Under `require()`,
   ESM `use` modules need Node >= 22.12.
 - Functions registered programmatically via `defineFunction` can't be wired
-  through a bare file import — use `loadTypeflowMapping` from `typeflow-js`
+  through a bare file import — use `loadTypeflowMapping` from `typeflowjs`
   for those.
 
 ## Build & test
@@ -93,6 +93,6 @@ bun run test   # builds, then verifies the full matrix against real
                # `bun scripts/build.ts` first
 ```
 
-Like the other `apps/*` packages, `typeflow-js` is deliberately not a
+Like the other `apps/*` packages, `typeflowjs` is deliberately not a
 declared dependency here (see `scripts/link-local-deps.ts` at the repo root);
 consumers get it as a peer at publish time.

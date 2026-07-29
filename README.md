@@ -4,7 +4,7 @@
 
 Typeflow is a declarative mapping language for JSON with first-class TypeScript typing — validated paths, inferred output types, and compile-time errors for your data transformations.
 
-**[▶ Try it in the Playground](https://thomasfarineau.github.io/typeflow/playground)** · [Documentation](https://thomasfarineau.github.io/typeflow/)
+**[▶ Try it in the Playground](https://typeflow.github.io/typeflow/playground)** · [Documentation](https://typeflow.github.io/typeflow/)
 
 You've written this function a hundred times: take the API's JSON, reshape it into the type your app wants. It's boring, it's error-prone, and when the API changes, TypeScript can't tell you which of your forty mapping functions just broke. JSONata and jq make the transformation declarative — but invisible to your compiler. Typeflow makes it declarative _and_ typed: paths autocomplete, typos are compile errors, output types are inferred, and your mappings are artifacts you can test, diff, and trust.
 
@@ -91,14 +91,14 @@ Enable typed imports in `tsconfig.json`:
 
 ### Programmatic API
 
-Only using it from code? Skip the CLI package — `typeflow-js` alone is enough:
+Only using it from code? Skip the CLI package — `typeflowjs` alone is enough:
 
 ```console
-$ bun add -d typeflow-js
+$ bun add -d typeflowjs
 ```
 
 ```ts
-import { loadTypeflowMapping } from 'typeflow-js';
+import { loadTypeflowMapping } from 'typeflowjs';
 
 const mapUser = await loadTypeflowMapping('./user.typeflow');
 const view = mapUser(apiResponse);
@@ -119,11 +119,12 @@ const view = mapUser(apiResponse);
 ## IDE support
 
 Syntax highlighting, inline diagnostics, and completion on `input`-bound
-fields — for VS Code (`apps/vscode-plugin`) and JetBrains IDEs
-(`apps/jetbrains-plugin`, IntelliJ/WebStorm/…). Both shell out to the
+fields — for [VS Code](https://github.com/typeflow/plugin-vscode) and
+[JetBrains IDEs](https://github.com/typeflow/plugin-jetbrains)
+(IntelliJ/WebStorm/…), each in its own repo. Both shell out to the
 `typeflow` CLI rather than bundling the compiler, so they always match
 whatever version is installed in your project. Build from source until
-they're on their respective marketplaces (each has a `README.md` with build
+they're on their respective marketplaces (each repo's `README.md` has build
 steps).
 
 ## The language (v0.1)
@@ -160,21 +161,24 @@ Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"
 
 | Package                                    | Responsibility                                                                        |
 | ------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `typeflow-js` (root)                       | Compiler, type checker, runtime, TS adapter, formatter. Zero deps                     |
+| `typeflowjs` (root)                        | Compiler, type checker, runtime, TS adapter, formatter. Zero deps                     |
 | `@typeflow/cli` (`apps/cli`)               | `check` / `infer` / `types` / `run` / `watch` / `init` / `fmt` / `convert`            |
 | `@typeflow/converters` (`apps/converters`) | jq/JSONata → Typeflow, native Rust (napi-rs), parallel batch conversion               |
 | `@typeflow/plugin` (`apps/plugin`)         | `import`/`require` `.typeflow` files directly — Node ESM loader, CJS hook, Bun plugin |
-| VS Code extension (`apps/vscode-plugin`)   | Syntax highlighting, diagnostics, completion                                          |
-| JetBrains plugin (`apps/jetbrains-plugin`) | Syntax highlighting, diagnostics, completion                                          |
 | `apps/benchmarks`                          | Runtime benchmarks vs jq/JSONata (private, powers the docs `/benchmark` page)         |
 
 Each `apps/*` package has its own `package.json`; see its `README.md` for
-build steps and why it isn't a declared Bun workspace member.
+build steps and why it isn't a declared Bun workspace member. The VS Code
+and JetBrains IDE plugins live in their own repos —
+[`typeflow/plugin-vscode`](https://github.com/typeflow/plugin-vscode) and
+[`typeflow/plugin-jetbrains`](https://github.com/typeflow/plugin-jetbrains)
+— since neither shares any source with the monorepo (both just shell out to
+the published `typeflow` CLI).
 
 ## Development
 
 ```console
-$ bun install                    # root deps; also links typeflow-js and
+$ bun install                    # root deps; also links typeflowjs and
                                   # @typeflow/converters into node_modules for
                                   # apps/cli (see scripts/link-local-deps.ts)
 $ bun test                       # 133 tests across parser, compiler, runtime, adapter, e2e
@@ -183,19 +187,16 @@ $ bun run demo                   # compile + run examples/api-response
 $ bun run docs:dev               # docs + playground (VitePress)
 ```
 
-`apps/cli`, `apps/converters`, `apps/vscode-plugin` and `apps/benchmarks` each
-need their own first-time install (Bun workspaces aren't used — see
+`apps/cli`, `apps/converters` and `apps/benchmarks` each need their own
+first-time install (Bun workspaces aren't used — see
 `scripts/link-local-deps.ts`):
 
 ```console
 $ bun install --cwd apps/cli
 $ bun install --cwd apps/plugin
-$ bun install --cwd apps/vscode-plugin
 $ bun install --cwd apps/benchmarks
 $ cd apps/converters && bun run build   # Rust toolchain required; cargo test runs its unit tests
 ```
-
-`apps/jetbrains-plugin` is Gradle/Kotlin — see its `README.md`.
 
 ## Roadmap
 

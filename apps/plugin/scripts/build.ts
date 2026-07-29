@@ -1,5 +1,5 @@
 /**
- * Bundles the four entry points into dist/ as ESM. `typeflow-js` (and its
+ * Bundles the four entry points into dist/ as ESM. `typeflowjs` (and its
  * `typescript` peer) stay external — resolved from the consumer's
  * node_modules at runtime, exactly like a real npm install would.
  * Run with: bun run build
@@ -23,7 +23,7 @@ const result = await Bun.build({
   target: 'node',
   format: 'esm',
   splitting: false,
-  external: ['typeflow-js', 'typeflow-js/runtime', 'typescript', 'bun'],
+  external: ['typeflowjs', 'typeflowjs/runtime', 'typescript', 'bun'],
 });
 
 if (!result.success) {

@@ -1,5 +1,5 @@
 /** `fmt` — rewrite mappings in canonical form. */
-import { format, formatDiagnostic } from 'typeflow-js';
+import { format, formatDiagnostic } from 'typeflowjs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { color } from '#reports';
 import { expandFiles } from '#glob';

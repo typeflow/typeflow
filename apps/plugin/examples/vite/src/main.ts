@@ -1,5 +1,5 @@
 // The mapping runs CLIENT-SIDE: compilation happened at build/dev time in
-// the Vite plugin, and this module only bundles typeflow-js/runtime (the
+// the Vite plugin, and this module only bundles typeflowjs/runtime (the
 // tiny browser-safe interpreter) plus the compiled artifact.
 import mapUser from './user.typeflow';
 

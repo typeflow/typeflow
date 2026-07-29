@@ -8,7 +8,7 @@ import {
   printDiagnostics,
   writeDts,
 } from '#reports';
-import { createTypeScriptResolver, emitDts } from 'typeflow-js';
+import { createTypeScriptResolver, emitDts } from 'typeflowjs';
 import { existsSync, watch } from 'node:fs';
 import { expandFiles } from '#glob';
 import { readFile } from 'node:fs/promises';
