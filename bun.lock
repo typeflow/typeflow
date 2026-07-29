@@ -94,7 +94,7 @@
 
     "@oxlint/binding-win32-x64-msvc": ["@oxlint/binding-win32-x64-msvc@1.76.0", "", { "os": "win32", "cpu": "x64" }, "sha512-5qcirPHO8nKfkoowEVWtpAoVTcYDy6g0UT0NGic450Qv8J2NrOqg4uQ8QppRP4MDTC7Xx47lbZnmadTH03CGGA=="],
 
-    "@typeflowjs/lint-config": ["@typeflowjs/lint-config@github:typeflow/lint-config#7a7eac2", { "peerDependencies": { "oxfmt": "^0.61.0", "oxlint": "^1.76.0" } }, "typeflow-lint-config-7a7eac2", "sha512-jDzhbi6qGYaf+y0WAtcqbMuCAX1czcODTZ39JhIf0vDFGCiZUKHoJy9V75EgjMa3t7X0VM3qlDP8tU1GkdEIAQ=="],
+    "@typeflowjs/lint-config": ["@typeflowjs/lint-config@github:typeflow/lint-config#9637b44", { "peerDependencies": { "oxfmt": "^0.61.0", "oxlint": "^1.76.0" } }, "typeflow-lint-config-9637b44", "sha512-ICu7IPfRvNaDD45CXUOz5CoKjGbP0FURKAEVxbR1K/QUO0OTioTc5SJgmdoOv5g+B0NxYb3vclFHKP2C/ZuogQ=="],
 
     "@types/bun": ["@types/bun@1.3.14", "", { "dependencies": { "bun-types": "1.3.14" } }, "sha512-h1hFqFVcvAvD9j9K7ZW7vd82aSA+rTdznZa+5bwvCwqSB1jmmfLcbIWhOLx1/+boy/xmjgCs/OMUL8hRJSmnPw=="],
 
