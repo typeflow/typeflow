@@ -11,8 +11,8 @@ import { rmSync } from 'node:fs';
 const root = fileURLToPath(new URL('..', import.meta.url));
 rmSync(`${root}dist`, { recursive: true, force: true });
 
-// Library entries ship in both module formats; the CLI bin lives in apps/cli
-// and is built separately (bun run --cwd apps/cli build).
+// Library entries ship in both module formats; the CLI bin lives in its own
+// repo (github.com/typeflow/cli) and is built there.
 const libEntries = [`${root}src/index.ts`, `${root}src/runtime/index.ts`];
 // The TS adapter loads the consumer's own TypeScript; never bundle it.
 const external = ['typescript'];

@@ -72,7 +72,7 @@ $ typeflow infer user.typeflow
 ## Quick start
 
 ```console
-$ bun add -d @typeflowjs/cli                                # the `typeflow` binary
+$ bun add -d @typeflowjs/cli                                # the `typeflow` binary (github.com/typeflow/cli)
 $ bunx typeflow init                                       # scaffold an example mapping
 $ bunx typeflow check                                       # tsc-style diagnostics
 $ bunx typeflow infer user.typeflow                         # print the inferred output type
@@ -106,9 +106,10 @@ const view = mapUser(apiResponse);
 
 ### Direct imports
 
-With `@typeflowjs/plugin`, skip even that — import the mapping file itself
-(`node --import @typeflowjs/plugin/register`, or `preload =
-["@typeflowjs/plugin/bun"]` in bunfig.toml; `require()` works too):
+With [`@typeflowjs/plugin`](https://github.com/typeflow/plugin-typescript),
+skip even that — import the mapping file itself (`node --import
+@typeflowjs/plugin/register`, or `preload = ["@typeflowjs/plugin/bun"]` in
+bunfig.toml; `require()` works too):
 
 ```ts
 import mapUser from './user.typeflow'; // typed via the .d.typeflow.ts sidecar
@@ -159,46 +160,44 @@ Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"
 
 ## Monorepo layout
 
-| Package                              | Responsibility                                                                        |
-| ------------------------------------ | ------------------------------------------------------------------------------------- |
-| `typeflowjs` (root)                  | Compiler, type checker, runtime, TS adapter, formatter. Zero deps                     |
-| `@typeflowjs/cli` (`apps/cli`)       | `check` / `infer` / `types` / `run` / `watch` / `init` / `fmt` / `convert`            |
-| `@typeflowjs/plugin` (`apps/plugin`) | `import`/`require` `.typeflow` files directly — Node ESM loader, CJS hook, Bun plugin |
-| `apps/benchmarks`                    | Runtime benchmarks vs jq/JSONata (private, powers the docs `/benchmark` page)         |
+| Package             | Responsibility                                                                |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `typeflowjs` (root) | Compiler, type checker, runtime, TS adapter, formatter. Zero deps             |
+| `apps/benchmarks`   | Runtime benchmarks vs jq/JSONata (private, powers the docs `/benchmark` page) |
 
-Each `apps/*` package has its own `package.json`; see its `README.md` for
-build steps and why it isn't a declared Bun workspace member. The VS Code
+`apps/benchmarks` has its own `package.json`; see its `README.md` for build
+steps and why it isn't a declared Bun workspace member. Everything else that
+used to live under `apps/*` has moved to its own repo, since none of it
+shares source with the monorepo:
+[`typeflow/cli`](https://github.com/typeflow/cli) (`@typeflowjs/cli` — the
+`typeflow` binary),
+[`typeflow/plugin-typescript`](https://github.com/typeflow/plugin-typescript)
+(`@typeflowjs/plugin` — import `.typeflow` files directly), and the VS Code
 and JetBrains IDE plugins, the converters that migrate mappings from other
-JSON mapping languages onto Typeflow, and the documentation site, live in
-their own repos —
+JSON mapping languages onto Typeflow, and the documentation site:
 [`typeflow/plugin-vscode`](https://github.com/typeflow/plugin-vscode),
 [`typeflow/plugin-jetbrains`](https://github.com/typeflow/plugin-jetbrains),
 [`typeflow/converters`](https://github.com/typeflow/converters) and
-[`typeflow/docs`](https://github.com/typeflow/docs) — since none of them
-share source with the monorepo (the plugins shell out to the published
-`typeflow` CLI; `@typeflowjs/converters` is a separate Rust/napi-rs toolchain
-the CLI's `convert` command imports lazily as an optional dependency; the
-docs site depends on the published `typeflowjs` package instead of reaching
-into `src/` directly).
+[`typeflow/docs`](https://github.com/typeflow/docs). All of them depend on
+the published `typeflowjs` package (`@typeflowjs/cli` and
+`@typeflowjs/converters` as regular/optional dependencies, `@typeflowjs/plugin`
+as a peer dependency since it compiles mappings in the consumer's own
+process) instead of reaching into `src/` directly.
 
 ## Development
 
 ```console
 $ bun install                    # root deps; also links typeflowjs into
-                                  # node_modules for apps/cli (see
-                                  # scripts/link-local-deps.ts)
+                                  # node_modules (see scripts/link-local-deps.ts)
 $ bun test                       # 133 tests across parser, compiler, runtime, adapter, e2e
 $ bun run typecheck              # generate example declarations + tsc --noEmit
 $ bun run demo                   # compile + run examples/api-response
 ```
 
-`apps/cli`, `apps/plugin` and `apps/benchmarks` each need their own
-first-time install (Bun workspaces aren't used — see
-`scripts/link-local-deps.ts`):
+`apps/benchmarks` needs its own first-time install (Bun workspaces aren't
+used — see `scripts/link-local-deps.ts`):
 
 ```console
-$ bun install --cwd apps/cli
-$ bun install --cwd apps/plugin
 $ bun install --cwd apps/benchmarks
 ```
 
