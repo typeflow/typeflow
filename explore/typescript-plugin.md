@@ -390,8 +390,8 @@ Ada Lovelace { city: 'London', country: 'unknown' }
 
 Resulting complete matrix:
 
-| Need                               | Mechanism                 |
-| ---------------------------------- | ------------------------- |
+| Need                               | Mechanism                |
+| ---------------------------------- | ------------------------ |
 | IDE inference (hover/autocomplete) | `typeflowjs/ts-plugin`   |
 | Running under Bun                  | `typeflowjs/plugin`      |
 | Running under Node/tsx/ts-node     | `typeflowjs/node-loader` |

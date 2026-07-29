@@ -159,12 +159,12 @@ Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"
 
 ## Monorepo layout
 
-| Package                                    | Responsibility                                                                        |
-| ------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `typeflowjs` (root)                        | Compiler, type checker, runtime, TS adapter, formatter. Zero deps                     |
-| `@typeflowjs/cli` (`apps/cli`)               | `check` / `infer` / `types` / `run` / `watch` / `init` / `fmt` / `convert`            |
-| `@typeflowjs/plugin` (`apps/plugin`)         | `import`/`require` `.typeflow` files directly — Node ESM loader, CJS hook, Bun plugin |
-| `apps/benchmarks`                          | Runtime benchmarks vs jq/JSONata (private, powers the docs `/benchmark` page)         |
+| Package                              | Responsibility                                                                        |
+| ------------------------------------ | ------------------------------------------------------------------------------------- |
+| `typeflowjs` (root)                  | Compiler, type checker, runtime, TS adapter, formatter. Zero deps                     |
+| `@typeflowjs/cli` (`apps/cli`)       | `check` / `infer` / `types` / `run` / `watch` / `init` / `fmt` / `convert`            |
+| `@typeflowjs/plugin` (`apps/plugin`) | `import`/`require` `.typeflow` files directly — Node ESM loader, CJS hook, Bun plugin |
+| `apps/benchmarks`                    | Runtime benchmarks vs jq/JSONata (private, powers the docs `/benchmark` page)         |
 
 Each `apps/*` package has its own `package.json`; see its `README.md` for
 build steps and why it isn't a declared Bun workspace member. The VS Code

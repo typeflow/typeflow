@@ -16,14 +16,14 @@ runtime half.
 
 ## Setup
 
-| Environment                       | Setup                                                            |
-| --------------------------------- | ---------------------------------------------------------------- |
-| TypeScript via `tsc` (tsconfig)   | sidecars for types; run the emitted JS with the Node flag below  |
-| Node — JS/emitted ESM **and** CJS | `node --import @typeflowjs/plugin/register app.js`                 |
-| tsx                               | `tsx --import @typeflowjs/plugin/register app.ts`                  |
+| Environment                       | Setup                                                                  |
+| --------------------------------- | ---------------------------------------------------------------------- |
+| TypeScript via `tsc` (tsconfig)   | sidecars for types; run the emitted JS with the Node flag below        |
+| Node — JS/emitted ESM **and** CJS | `node --import @typeflowjs/plugin/register app.js`                     |
+| tsx                               | `tsx --import @typeflowjs/plugin/register app.ts`                      |
 | ts-node (CommonJS mode)           | `node -r ts-node/register --import @typeflowjs/plugin/register app.ts` |
-| Bun — TS or JS                    | `preload = ["@typeflowjs/plugin/bun"]` in bunfig.toml              |
-| Vite (dev, build, SSR) / Rollup   | `plugins: [typeflow()]` from `@typeflowjs/plugin/vite`             |
+| Bun — TS or JS                    | `preload = ["@typeflowjs/plugin/bun"]` in bunfig.toml                  |
+| Vite (dev, build, SSR) / Rollup   | `plugins: [typeflow()]` from `@typeflowjs/plugin/vite`                 |
 
 The Node hooks chain: tsx/ts-node handle `.ts`, this plugin handles
 `.typeflow`, in the same process and in either flag order.
