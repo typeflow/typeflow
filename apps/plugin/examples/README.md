@@ -1,7 +1,7 @@
-# @typeflow/plugin examples
+# @typeflowjs/plugin examples
 
 One self-contained example per supported environment. Each uses the real
-published specifiers (`@typeflow/plugin/...`), which resolve inside this
+published specifiers (`@typeflowjs/plugin/...`), which resolve inside this
 monorepo through the postinstall symlinks (`scripts/link-local-deps.ts` at
 the repo root).
 

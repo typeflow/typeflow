@@ -1,7 +1,7 @@
 // "Normal TypeScript" path: compiled by tsc with a real tsconfig
 // (allowArbitraryExtensions + the .d.typeflow.ts sidecar make the import
 // fully typed), then the EMITTED JavaScript runs under
-// `node --import @typeflow/plugin/register`.
+// `node --import @typeflowjs/plugin/register`.
 import assert from 'node:assert/strict';
 import mapUser from '../fixtures/user.typeflow';
 

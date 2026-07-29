@@ -2,8 +2,8 @@
  * Programmatic entry point. Most consumers never import this — they use the
  * side-effect entries instead:
  *
- *   node --import @typeflow/plugin/register app.js   # ESM + require() hooks
- *   preload = ["@typeflow/plugin/bun"]               # bunfig.toml
+ *   node --import @typeflowjs/plugin/register app.js   # ESM + require() hooks
+ *   preload = ["@typeflowjs/plugin/bun"]               # bunfig.toml
  *   plugins: [typeflow()]                            # vite.config.ts, from ./vite
  */
 import { installEsmHook } from './esm';

@@ -1,5 +1,5 @@
 // Exercises `require('*.typeflow')` (Node with --import
-// @typeflow/plugin/register, which installs the require hook too).
+// @typeflowjs/plugin/register, which installs the require hook too).
 const assert = require('node:assert/strict');
 const mapUser = require('./fixtures/user.typeflow');
 

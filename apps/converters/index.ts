@@ -79,13 +79,13 @@ function abiSuffix(): string {
 function platformPackageName(): string | undefined {
   const { platform, arch } = process;
   if (platform === 'win32' && arch === 'x64')
-    return '@typeflow/converters-win32-x64-msvc';
+    return '@typeflowjs/converters-win32-x64-msvc';
   if (platform === 'darwin' && arch === 'x64')
-    return '@typeflow/converters-darwin-x64';
+    return '@typeflowjs/converters-darwin-x64';
   if (platform === 'darwin' && arch === 'arm64')
-    return '@typeflow/converters-darwin-arm64';
+    return '@typeflowjs/converters-darwin-arm64';
   if (platform === 'linux' && arch === 'x64' && !isMusl())
-    return '@typeflow/converters-linux-x64-gnu';
+    return '@typeflowjs/converters-linux-x64-gnu';
   return undefined;
 }
 
@@ -118,7 +118,7 @@ function loadNative(): NativeModule {
     }
   }
   throw new Error(
-    `@typeflow/converters: no prebuilt addon for ${process.platform}-${process.arch}. ` +
+    `@typeflowjs/converters: no prebuilt addon for ${process.platform}-${process.arch}. ` +
       'Run `bun run build` (requires a Rust toolchain).',
   );
 }

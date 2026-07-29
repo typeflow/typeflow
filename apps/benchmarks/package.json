@@ -1,5 +1,5 @@
 {
-  "name": "@typeflow/benchmarks",
+  "name": "@typeflowjs/benchmarks",
   "version": "0.0.1",
   "private": true,
   "description": "Typeflow runtime benchmarks vs jq and JSONata",

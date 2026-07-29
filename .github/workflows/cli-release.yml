@@ -1,4 +1,4 @@
-name: Publish @typeflow/cli
+name: Publish @typeflowjs/cli
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
       - name: Verify release secrets are configured
         run: |
           if [ -z "$NPM_TOKEN" ]; then
-            echo "::error::Missing repository secret: NPM_TOKEN (npmjs.org automation token — the @typeflow org doesn't exist yet, this workflow stays dormant until it does)"
+            echo "::error::Missing repository secret: NPM_TOKEN (npmjs.org automation token — the @typeflowjs org doesn't exist yet, this workflow stays dormant until it does)"
             exit 1
           fi
       - uses: oven-sh/setup-bun@v2
@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
-      # `typeflowjs` and `@typeflow/converters` are marked external by
+      # `typeflowjs` and `@typeflowjs/converters` are marked external by
       # apps/cli/scripts/build.ts's bundler config, so this build never
       # touches the repo-root postinstall symlink hack (scripts/link-local-deps.ts)
       # — only apps/cli's own dependency (commander) needs installing.

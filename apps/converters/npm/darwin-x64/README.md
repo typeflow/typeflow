@@ -1,3 +1,3 @@
-# `@typeflow/converters-darwin-x64`
+# `@typeflowjs/converters-darwin-x64`
 
-This is the **x86_64-apple-darwin** binary for `@typeflow/converters`
+This is the **x86_64-apple-darwin** binary for `@typeflowjs/converters`

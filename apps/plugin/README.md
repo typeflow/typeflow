@@ -1,4 +1,4 @@
-# @typeflow/plugin
+# @typeflowjs/plugin
 
 Import `.typeflow` mapping files directly, in every JS/TS environment:
 
@@ -19,11 +19,11 @@ runtime half.
 | Environment                       | Setup                                                            |
 | --------------------------------- | ---------------------------------------------------------------- |
 | TypeScript via `tsc` (tsconfig)   | sidecars for types; run the emitted JS with the Node flag below  |
-| Node — JS/emitted ESM **and** CJS | `node --import @typeflow/plugin/register app.js`                 |
-| tsx                               | `tsx --import @typeflow/plugin/register app.ts`                  |
-| ts-node (CommonJS mode)           | `node -r ts-node/register --import @typeflow/plugin/register app.ts` |
-| Bun — TS or JS                    | `preload = ["@typeflow/plugin/bun"]` in bunfig.toml              |
-| Vite (dev, build, SSR) / Rollup   | `plugins: [typeflow()]` from `@typeflow/plugin/vite`             |
+| Node — JS/emitted ESM **and** CJS | `node --import @typeflowjs/plugin/register app.js`                 |
+| tsx                               | `tsx --import @typeflowjs/plugin/register app.ts`                  |
+| ts-node (CommonJS mode)           | `node -r ts-node/register --import @typeflowjs/plugin/register app.ts` |
+| Bun — TS or JS                    | `preload = ["@typeflowjs/plugin/bun"]` in bunfig.toml              |
+| Vite (dev, build, SSR) / Rollup   | `plugins: [typeflow()]` from `@typeflowjs/plugin/vite`             |
 
 The Node hooks chain: tsx/ts-node handle `.ts`, this plugin handles
 `.typeflow`, in the same process and in either flag order.
@@ -31,26 +31,26 @@ The Node hooks chain: tsx/ts-node handle `.ts`, this plugin handles
 **Node** (one flag covers both ESM `import` and CJS `require`):
 
 ```console
-$ node --import @typeflow/plugin/register app.js
+$ node --import @typeflowjs/plugin/register app.js
 ```
 
 or programmatically, before the first `.typeflow` import:
 
 ```ts
-import { register } from '@typeflow/plugin';
+import { register } from '@typeflowjs/plugin';
 register();
 ```
 
 **Bun** (`bun run`, `bun test`, `bun build`) — in `bunfig.toml`:
 
 ```toml
-preload = ["@typeflow/plugin/bun"]
+preload = ["@typeflowjs/plugin/bun"]
 ```
 
 **Vite / Rollup** — in `vite.config.ts`:
 
 ```ts
-import typeflow from '@typeflow/plugin/vite';
+import typeflow from '@typeflowjs/plugin/vite';
 
 export default defineConfig({ plugins: [typeflow()] });
 ```

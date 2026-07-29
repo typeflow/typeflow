@@ -1,4 +1,4 @@
-# @typeflow/converters
+# @typeflowjs/converters
 
 The Typeflow converters (jq → Typeflow, JSONata → Typeflow) rewritten in
 Rust and exposed as a native Node.js addon (`.node`, via napi-rs), behind a
@@ -22,7 +22,7 @@ import {
   convertJsonata,
   formatTypeflow,
   typeFromSample,
-} from '@typeflow/converters';
+} from '@typeflowjs/converters';
 
 convertJq('{ id: .id, name: .user.name }');
 convertJsonata('{ "fullName": firstName & " " & lastName }', {
@@ -53,7 +53,7 @@ Published npm releases cover more than the host platform: `.github/workflows/con
 cross-builds a matrix of targets (win32-x64, darwin-x64, darwin-arm64,
 linux-x64-gnu today — see `napi.triples.additional` in `package.json`) via
 `@napi-rs/cli`, and ships each as its own `optionalDependencies` package
-(e.g. `@typeflow/converters-win32-x64-msvc`) so `npm install` only pulls the
+(e.g. `@typeflowjs/converters-win32-x64-msvc`) so `npm install` only pulls the
 one matching the consumer's platform. `index.ts`'s loader tries that
 platform package first, falling back to a local `.node` file for the
 `bun run build` dev loop above.

@@ -1,5 +1,5 @@
 // Exercises `import ... from '*.typeflow'` (Node with --import
-// @typeflow/plugin/register, or Bun with --preload @typeflow/plugin/bun).
+// @typeflowjs/plugin/register, or Bun with --preload @typeflowjs/plugin/bun).
 import assert from 'node:assert/strict';
 import mapUser from './fixtures/user.typeflow';
 

@@ -8,7 +8,7 @@ under the Node hook.
 ```sh
 bunx typeflow types user.typeflow           # generate the typed sidecar
 bun x tsc -p .                              # typecheck + emit app.js
-node --import @typeflow/plugin/register app.js
+node --import @typeflowjs/plugin/register app.js
 ```
 
 Note: the `use` helper here is a `.ts` module, imported as-is by the emitted

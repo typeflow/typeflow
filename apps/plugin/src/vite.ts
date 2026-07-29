@@ -2,7 +2,7 @@
  * Vite (and plain Rollup) plugin — same shape works for both. In
  * vite.config.ts:
  *
- *   import typeflow from '@typeflow/plugin/vite';
+ *   import typeflow from '@typeflowjs/plugin/vite';
  *   export default defineConfig({ plugins: [typeflow()] });
  *
  * Compilation happens here at build/dev time (Node side); the emitted module

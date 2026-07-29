@@ -9,7 +9,7 @@
  *      ESM run under node --import
  *   5. tsc → emitted CommonJS (.cts → .cjs) run under node --import
  *   6. bun  --preload dist/bun.js      → TypeScript entry under Bun
- *   7. vite build with @typeflow/plugin/vite → bundle runs standalone
+ *   7. vite build with @typeflowjs/plugin/vite → bundle runs standalone
  *   8. tsx (composed hooks: ours + tsx's, one node invocation)
  *   9. ts-node CJS (-r ts-node/register + our --import, own tsconfig)
  *

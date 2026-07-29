@@ -23,12 +23,12 @@ export async function cmdConvert(
     process.exit(1);
   }
 
-  // Imported lazily: @typeflow/converters loads a native Rust addon at import
+  // Imported lazily: @typeflowjs/converters loads a native Rust addon at import
   // time and throws when no prebuilt .node exists for the platform — that
   // must only gate `convert`, not every other CLI command.
-  let converters: typeof import('@typeflow/converters');
+  let converters: typeof import('@typeflowjs/converters');
   try {
-    converters = await import('@typeflow/converters');
+    converters = await import('@typeflowjs/converters');
   } catch (e) {
     console.error(e instanceof Error ? e.message : String(e));
     process.exit(1);

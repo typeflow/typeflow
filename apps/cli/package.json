@@ -1,5 +1,5 @@
 {
-  "name": "@typeflow/cli",
+  "name": "@typeflowjs/cli",
   "version": "0.0.1",
   "description": "Typeflow CLI — check, format, and run .typeflow mappings from the command line",
   "license": "MIT",

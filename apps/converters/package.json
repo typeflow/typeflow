@@ -1,5 +1,5 @@
 {
-  "name": "@typeflow/converters",
+  "name": "@typeflowjs/converters",
   "version": "0.0.1",
   "description": "Typeflow converters (jq / JSONata to Typeflow) as a native Node.js addon, written in Rust",
   "license": "MIT",
@@ -28,10 +28,10 @@
     "@napi-rs/cli": "^2.18.4"
   },
   "optionalDependencies": {
-    "@typeflow/converters-darwin-arm64": "0.0.1",
-    "@typeflow/converters-darwin-x64": "0.0.1",
-    "@typeflow/converters-linux-x64-gnu": "0.0.1",
-    "@typeflow/converters-win32-x64-msvc": "0.0.1"
+    "@typeflowjs/converters-darwin-arm64": "0.0.1",
+    "@typeflowjs/converters-darwin-x64": "0.0.1",
+    "@typeflowjs/converters-linux-x64-gnu": "0.0.1",
+    "@typeflowjs/converters-win32-x64-msvc": "0.0.1"
   },
   "napi": {
     "name": "typeflow-converters",

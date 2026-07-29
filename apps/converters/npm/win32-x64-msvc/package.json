@@ -1,5 +1,5 @@
 {
-  "name": "@typeflow/converters-win32-x64-msvc",
+  "name": "@typeflowjs/converters-win32-x64-msvc",
   "version": "0.0.1",
   "description": "Typeflow converters (jq / JSONata to Typeflow) as a native Node.js addon, written in Rust",
   "license": "MIT",

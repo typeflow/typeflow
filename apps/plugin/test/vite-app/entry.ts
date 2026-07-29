@@ -1,4 +1,4 @@
-// Vite path: bundled by `vite build` with @typeflow/plugin/vite — the
+// Vite path: bundled by `vite build` with @typeflowjs/plugin/vite — the
 // compiled artifact and the `use` helpers get bundled in; the output runs
 // standalone (no hooks needed at runtime).
 import assert from 'node:assert/strict';

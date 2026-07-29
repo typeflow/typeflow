@@ -4,7 +4,7 @@
 require hook alongside the ESM loader.
 
 ```sh
-node --import @typeflow/plugin/register app.cjs
+node --import @typeflowjs/plugin/register app.cjs
 ```
 
 Note: this mapping's `use` helper is an ESM module, which `require()` can

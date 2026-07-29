@@ -1,3 +1,3 @@
-# `@typeflow/converters-win32-x64-msvc`
+# `@typeflowjs/converters-win32-x64-msvc`
 
-This is the **x86_64-pc-windows-msvc** binary for `@typeflow/converters`
+This is the **x86_64-pc-windows-msvc** binary for `@typeflowjs/converters`

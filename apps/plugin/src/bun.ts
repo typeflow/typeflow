@@ -1,7 +1,7 @@
 /**
  * Bun runtime/bundler plugin. Wire it up once in bunfig.toml:
  *
- *   preload = ["@typeflow/plugin/bun"]
+ *   preload = ["@typeflowjs/plugin/bun"]
  *
  * and `.typeflow` imports work under `bun run`, `bun test`, and `bun build`.
  */

@@ -9,9 +9,9 @@ Unlike tsx, ts-node typechecks — so the `.typeflow` import needs its
 
 ```sh
 bunx typeflow types user.typeflow
-node -r ts-node/register --import @typeflow/plugin/register app.ts
+node -r ts-node/register --import @typeflowjs/plugin/register app.ts
 ```
 
-ts-node's ESM loader mode works too (`node --import @typeflow/plugin/register
+ts-node's ESM loader mode works too (`node --import @typeflowjs/plugin/register
 --loader ts-node/esm app.ts`), with ts-node's usual experimental-loader
 warning — for ESM TypeScript, prefer the `tsx` example.

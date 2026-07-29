@@ -15,7 +15,7 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "typeflowjs": ["../../src/index.ts"],
-      "@typeflow/converters": ["../converters/index.ts"]
+      "@typeflowjs/converters": ["../converters/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "scripts/**/*.ts"]

@@ -18,7 +18,7 @@ const result = await Bun.build({
   target: 'node',
   format: 'esm',
   splitting: false,
-  external: ['typescript', 'typeflowjs', '@typeflow/converters'],
+  external: ['typescript', 'typeflowjs', '@typeflowjs/converters'],
 });
 
 if (!result.success) {

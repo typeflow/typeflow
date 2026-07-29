@@ -72,7 +72,7 @@ $ typeflow infer user.typeflow
 ## Quick start
 
 ```console
-$ bun add -d @typeflow/cli                                # the `typeflow` binary
+$ bun add -d @typeflowjs/cli                                # the `typeflow` binary
 $ bunx typeflow init                                       # scaffold an example mapping
 $ bunx typeflow check                                       # tsc-style diagnostics
 $ bunx typeflow infer user.typeflow                         # print the inferred output type
@@ -106,9 +106,9 @@ const view = mapUser(apiResponse);
 
 ### Direct imports
 
-With `@typeflow/plugin`, skip even that — import the mapping file itself
-(`node --import @typeflow/plugin/register`, or `preload =
-["@typeflow/plugin/bun"]` in bunfig.toml; `require()` works too):
+With `@typeflowjs/plugin`, skip even that — import the mapping file itself
+(`node --import @typeflowjs/plugin/register`, or `preload =
+["@typeflowjs/plugin/bun"]` in bunfig.toml; `require()` works too):
 
 ```ts
 import mapUser from './user.typeflow'; // typed via the .d.typeflow.ts sidecar
@@ -162,9 +162,9 @@ Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"
 | Package                                    | Responsibility                                                                        |
 | ------------------------------------------ | ------------------------------------------------------------------------------------- |
 | `typeflowjs` (root)                        | Compiler, type checker, runtime, TS adapter, formatter. Zero deps                     |
-| `@typeflow/cli` (`apps/cli`)               | `check` / `infer` / `types` / `run` / `watch` / `init` / `fmt` / `convert`            |
-| `@typeflow/converters` (`apps/converters`) | jq/JSONata → Typeflow, native Rust (napi-rs), parallel batch conversion               |
-| `@typeflow/plugin` (`apps/plugin`)         | `import`/`require` `.typeflow` files directly — Node ESM loader, CJS hook, Bun plugin |
+| `@typeflowjs/cli` (`apps/cli`)               | `check` / `infer` / `types` / `run` / `watch` / `init` / `fmt` / `convert`            |
+| `@typeflowjs/converters` (`apps/converters`) | jq/JSONata → Typeflow, native Rust (napi-rs), parallel batch conversion               |
+| `@typeflowjs/plugin` (`apps/plugin`)         | `import`/`require` `.typeflow` files directly — Node ESM loader, CJS hook, Bun plugin |
 | `apps/benchmarks`                          | Runtime benchmarks vs jq/JSONata (private, powers the docs `/benchmark` page)         |
 
 Each `apps/*` package has its own `package.json`; see its `README.md` for
@@ -179,7 +179,7 @@ the published `typeflow` CLI).
 
 ```console
 $ bun install                    # root deps; also links typeflowjs and
-                                  # @typeflow/converters into node_modules for
+                                  # @typeflowjs/converters into node_modules for
                                   # apps/cli (see scripts/link-local-deps.ts)
 $ bun test                       # 133 tests across parser, compiler, runtime, adapter, e2e
 $ bun run typecheck              # generate example declarations + tsc --noEmit

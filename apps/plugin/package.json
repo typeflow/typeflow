@@ -1,5 +1,5 @@
 {
-  "name": "@typeflow/plugin",
+  "name": "@typeflowjs/plugin",
   "version": "0.0.1",
   "description": "Import .typeflow mapping files directly — Node ESM loader, CommonJS require hook, and Bun plugin",
   "license": "MIT",

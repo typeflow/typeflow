@@ -1,4 +1,4 @@
-name: Publish @typeflow/converters
+name: Publish @typeflowjs/converters
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
       - name: Verify release secrets are configured
         run: |
           if [ -z "$NPM_TOKEN" ]; then
-            echo "::error::Missing repository secret: NPM_TOKEN (npmjs.org automation token — the @typeflow org doesn't exist yet, this workflow stays dormant until it does)"
+            echo "::error::Missing repository secret: NPM_TOKEN (npmjs.org automation token — the @typeflowjs org doesn't exist yet, this workflow stays dormant until it does)"
             exit 1
           fi
       - name: Verify tag matches package.json, Cargo.toml and optionalDependencies
