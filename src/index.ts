@@ -7,7 +7,13 @@ import { loadExternalFunctions } from './runtime/external';
 import { readFile } from 'node:fs/promises';
 
 export * from './core/index';
-export { parse } from './parser/index';
+export {
+  parse,
+  tokenize,
+  type Token,
+  type TokenType,
+  type TokenizeOptions,
+} from './parser/index';
 export {
   compile,
   defineFunction,
