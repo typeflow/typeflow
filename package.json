@@ -55,10 +55,9 @@
   },
   "scripts": {
     "postinstall": "bun scripts/link-local-deps.ts",
-    "typeflow": "bun apps/cli/src/main.ts",
-    "build": "bun scripts/build.ts && bun run --cwd apps/cli build",
-    "typecheck": "bun apps/cli/src/main.ts types \"examples/**/*.typeflow\" && tsc --noEmit",
-    "check:examples": "bun apps/cli/src/main.ts check \"examples/**/*.typeflow\"",
+    "build": "bun scripts/build.ts",
+    "typecheck": "bun scripts/check-examples.ts types && tsc --noEmit",
+    "check:examples": "bun scripts/check-examples.ts check",
     "demo": "bun examples/api-response/demo.ts",
     "test": "bun test",
     "lint": "oxlint .",
