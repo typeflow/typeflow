@@ -157,20 +157,3 @@ Deliberately **not** a programming language: no loops, no mutation, no recursion
 | Deterministic by design             | ✅       | ⚠️      | ✅  | n/a             | ❌                |
 
 Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"; Typeflow answers "how does X become Y, and is that conversion sound?"
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, scripts, and
-commit conventions.
-
-## Roadmap
-
-- **v0.1 (this)** — core language, TS adapter, inference, `.d.typeflow.ts` emission, CLI, formatter, jq/JSONata converter, VS Code + JetBrains support.
-- **v0.5** — language server (real diagnostics/completion instead of shelling out to the CLI), Zod/JSON Schema adapters, fragments, `match` on discriminated unions, fixtures, contract mode (declared output).
-- **v1.0** — frozen grammar + conformance suite, OpenAPI adapter, execution limits, Vite plugin.
-
-Pre-1.0, syntax and APIs are **unstable** by design.
-
-## License
-
-MIT © Thomas Farineau
