@@ -25,15 +25,3 @@ jobs:
       - # builds the plugin, then verifies its three hooks (node esm import,
         # node cjs require, bun import) against real processes
         run: bun run --cwd apps/plugin test
-
-  converters:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: apps/converters
-      - run: cargo fmt --check
-        working-directory: apps/converters
-      - run: cargo test
-        working-directory: apps/converters

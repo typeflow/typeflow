@@ -4,12 +4,18 @@
  * even for a normal, non-root sibling workspace member once the root itself
  * is one of its transitive deps. So apps/cli (and any future apps/*
  * consumer) is deliberately NOT a declared bun workspace member, and doesn't
- * declare `typeflowjs` / `@typeflowjs/converters` as real package.json
- * dependencies — both would make `bun install`/`bun add` abort.
- * Instead this script manually links each into node_modules/, the same
- * resolution a real npm install of the published packages would produce.
- * Wired into the root "postinstall" script so it's recreated on every
- * install (works on any machine or CI, not just where it was first run).
+ * declare `typeflowjs` as a real package.json dependency — that would make
+ * `bun install`/`bun add` abort. Instead this script manually links it into
+ * node_modules/, the same resolution a real npm install of the published
+ * package would produce. Wired into the root "postinstall" script so it's
+ * recreated on every install (works on any machine or CI, not just where it
+ * was first run).
+ *
+ * `@typeflowjs/converters` used to be linked here too, back when it lived in
+ * this repo as apps/converters — it's now its own repo/package
+ * (github.com/typeflow/converters) with its own release cycle, so
+ * apps/cli's `convert` command resolves it as a real (optional, dynamically
+ * imported) dependency instead once it's published.
  */
 import {
   existsSync,
@@ -26,11 +32,6 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 
 const links: { scope?: string; name: string; target: string }[] = [
   { name: 'typeflowjs', target: root },
-  {
-    scope: '@typeflowjs',
-    name: 'converters',
-    target: join(root, 'apps', 'converters'),
-  },
   {
     scope: '@typeflowjs',
     name: 'plugin',

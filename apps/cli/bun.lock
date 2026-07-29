@@ -3,9 +3,12 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@typeflow/cli",
+      "name": "@typeflowjs/cli",
       "dependencies": {
         "commander": "^15.0.0",
+      },
+      "optionalDependencies": {
+        "@typeflowjs/converters": "0.0.1",
       },
       "peerDependencies": {
         "typescript": ">=5.0.0",

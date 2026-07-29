@@ -14,8 +14,7 @@
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "typeflowjs": ["../../src/index.ts"],
-      "@typeflowjs/converters": ["../converters/index.ts"]
+      "typeflowjs": ["../../src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "scripts/**/*.ts"]

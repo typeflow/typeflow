@@ -163,31 +163,34 @@ Zod is a natural _input_ to Typeflow, not a competitor: Zod answers "is this X?"
 | ------------------------------------------ | ------------------------------------------------------------------------------------- |
 | `typeflowjs` (root)                        | Compiler, type checker, runtime, TS adapter, formatter. Zero deps                     |
 | `@typeflowjs/cli` (`apps/cli`)               | `check` / `infer` / `types` / `run` / `watch` / `init` / `fmt` / `convert`            |
-| `@typeflowjs/converters` (`apps/converters`) | jq/JSONata → Typeflow, native Rust (napi-rs), parallel batch conversion               |
 | `@typeflowjs/plugin` (`apps/plugin`)         | `import`/`require` `.typeflow` files directly — Node ESM loader, CJS hook, Bun plugin |
 | `apps/benchmarks`                          | Runtime benchmarks vs jq/JSONata (private, powers the docs `/benchmark` page)         |
 
 Each `apps/*` package has its own `package.json`; see its `README.md` for
 build steps and why it isn't a declared Bun workspace member. The VS Code
-and JetBrains IDE plugins live in their own repos —
-[`typeflow/plugin-vscode`](https://github.com/typeflow/plugin-vscode) and
+and JetBrains IDE plugins, and the native jq/JSONata converters, live in
+their own repos —
+[`typeflow/plugin-vscode`](https://github.com/typeflow/plugin-vscode),
 [`typeflow/plugin-jetbrains`](https://github.com/typeflow/plugin-jetbrains)
-— since neither shares any source with the monorepo (both just shell out to
-the published `typeflow` CLI).
+and [`typeflow/converters`](https://github.com/typeflow/converters) — since
+none of them share source with the monorepo (the plugins shell out to the
+published `typeflow` CLI; `@typeflowjs/converters` is a separate Rust/napi-rs
+toolchain the CLI's `convert` command imports lazily as an optional
+dependency).
 
 ## Development
 
 ```console
-$ bun install                    # root deps; also links typeflowjs and
-                                  # @typeflowjs/converters into node_modules for
-                                  # apps/cli (see scripts/link-local-deps.ts)
+$ bun install                    # root deps; also links typeflowjs into
+                                  # node_modules for apps/cli (see
+                                  # scripts/link-local-deps.ts)
 $ bun test                       # 133 tests across parser, compiler, runtime, adapter, e2e
 $ bun run typecheck              # generate example declarations + tsc --noEmit
 $ bun run demo                   # compile + run examples/api-response
 $ bun run docs:dev               # docs + playground (VitePress)
 ```
 
-`apps/cli`, `apps/converters` and `apps/benchmarks` each need their own
+`apps/cli`, `apps/plugin` and `apps/benchmarks` each need their own
 first-time install (Bun workspaces aren't used — see
 `scripts/link-local-deps.ts`):
 
@@ -195,7 +198,6 @@ first-time install (Bun workspaces aren't used — see
 $ bun install --cwd apps/cli
 $ bun install --cwd apps/plugin
 $ bun install --cwd apps/benchmarks
-$ cd apps/converters && bun run build   # Rust toolchain required; cargo test runs its unit tests
 ```
 
 ## Roadmap
